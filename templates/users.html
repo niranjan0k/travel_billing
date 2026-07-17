@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}User Management{% endblock %}
+{% block content %}
+<div class="page-title-bar">
+  <h3><i class="bi bi-person-gear me-2 text-accent"></i>User Management</h3>
+  <button class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#userModal">
+    <i class="bi bi-plus-lg me-1"></i>Add User
+  </button>
+</div>
+
+<div class="card">
+  <div class="card-header bg-white py-3">
+    <strong>Portal Users</strong>
+    <span class="badge bg-secondary ms-2">{{ users|length }}</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Username</th>
+          <th>Display Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for u in users %}
+        <tr>
+          <td class="text-muted">{{ u.id }}</td>
+          <td><strong>{{ u.username }}</strong></td>
+          <td>{{ u.display_name or '—' }}</td>
+          <td>{{ u.email or '—' }}</td>
+          <td>
+            {% if u.role == 'admin' %}
+              <span class="badge bg-danger">Admin</span>
+            {% elif u.role == 'staff' %}
+              <span class="badge bg-primary">Staff</span>
+            {% else %}
+              <span class="badge bg-secondary">{{ u.role|title }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u.is_active %}
+              <span class="badge badge-active">Active</span>
+            {% else %}
+              <span class="badge badge-inactive">Inactive</span>
+            {% endif %}
+          </td>
+          <td class="text-muted small">{{ u.created_at.strftime('%d-%m-%Y') }}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-secondary me-1 btn-edit-user"
+              data-id="{{ u.id }}"
+              data-username="{{ u.username }}"
+              data-display="{{ u.display_name or '' }}"
+              data-email="{{ u.email or '' }}"
+              data-role="{{ u.role }}"
+              data-active="{{ '1' if u.is_active else '' }}"
+              data-bs-toggle="modal" data-bs-target="#userModal">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <form method="post" action="{{ url_for('delete_user', uid=u.id) }}" class="d-inline"
+                  onsubmit="return confirm('Delete user {{ u.username }}?')">
+              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8" class="text-center text-muted py-4">No users yet. Add one above.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal fade" id="userModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="post" action="{{ url_for('save_user') }}" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="userModalTitle">Add User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="id" id="userId">
+        <div class="mb-3">
+          <label class="form-label">Username <span class="text-danger">*</span></label>
+          <input class="form-control" name="username" id="fieldUsername" required autocomplete="off">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Display Name</label>
+          <input class="form-control" name="display_name" id="fieldDisplayName">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input class="form-control" type="email" name="email" id="fieldEmail">
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="form-label">Role</label>
+            <select class="form-select" name="role" id="fieldRole">
+              <option value="admin">Admin</option>
+              <option value="staff" selected>Staff</option>
+              <option value="viewer">Viewer</option>
+            </select>
+          </div>
+          <div class="col-6 d-flex align-items-end">
+            <div class="form-check form-switch mb-1">
+              <input class="form-check-input" type="checkbox" name="is_active" id="fieldActive" value="1" checked>
+              <label class="form-check-label" for="fieldActive">Active</label>
+            </div>
+          </div>
+        </div>
+        <div class="mb-1">
+          <label class="form-label">Password <span class="text-muted small" id="passHint">(required for new users)</span></label>
+          <input class="form-control" type="password" name="password" id="fieldPassword" autocomplete="new-password">
+          <div class="form-text" id="passEditHint" style="display:none">Leave blank to keep existing password.</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-accent">Save User</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.btn-edit-user').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById('userModalTitle').textContent = 'Edit User';
+    document.getElementById('userId').value      = btn.dataset.id;
+    document.getElementById('fieldUsername').value     = btn.dataset.username;
+    document.getElementById('fieldDisplayName').value  = btn.dataset.display;
+    document.getElementById('fieldEmail').value        = btn.dataset.email;
+    document.getElementById('fieldRole').value         = btn.dataset.role;
+    document.getElementById('fieldActive').checked     = btn.dataset.active === '1';
+    document.getElementById('passHint').style.display  = 'none';
+    document.getElementById('passEditHint').style.display = 'block';
+    document.getElementById('fieldPassword').required  = false;
+  });
+});
+
+document.getElementById('userModal').addEventListener('hidden.bs.modal', () => {
+  document.getElementById('userModalTitle').textContent = 'Add User';
+  document.getElementById('userId').value = '';
+  document.getElementById('fieldUsername').value = '';
+  document.getElementById('fieldDisplayName').value = '';
+  document.getElementById('fieldEmail').value = '';
+  document.getElementById('fieldRole').value = 'staff';
+  document.getElementById('fieldActive').checked = true;
+  document.getElementById('fieldPassword').value = '';
+  document.getElementById('passHint').style.display = 'inline';
+  document.getElementById('passEditHint').style.display = 'none';
+});
+</script>
+{% endblock %}

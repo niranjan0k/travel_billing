@@ -3,42 +3,184 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}Travel Billing{% endblock %}</title>
+<title>{% block title %}Sona Travel Agency{% endblock %}</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 {% block body %}
 <body>
-<div class="container-fluid">
-  <div class="row">
-    <nav class="col-md-2 sidebar">
-      <div class="brand">TRAVEL BILLING<small>SONA · ADMIN</small></div>
-      <ul class="nav flex-column">
-        {% set p = request.path %}
-        <li><a class="nav-link {% if p == '/' %}active{% endif %}" href="{{ url_for('dashboard') }}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
-        <li><a class="nav-link {% if '/invoice/new' in p %}active{% endif %}" href="{{ url_for('new_invoice') }}"><i class="bi bi-file-earmark-plus me-2"></i>New Invoice</a></li>
-        <li><a class="nav-link {% if p == '/invoices' %}active{% endif %}" href="{{ url_for('invoices') }}"><i class="bi bi-receipt me-2"></i>Invoices</a></li>
-        <li><a class="nav-link {% if p.startswith('/customers') %}active{% endif %}" href="{{ url_for('customers') }}"><i class="bi bi-people me-2"></i>Customers</a></li>
-        <li><a class="nav-link {% if p.startswith('/agencies') %}active{% endif %}" href="{{ url_for('agencies') }}"><i class="bi bi-building me-2"></i>Agencies</a></li>
-      </ul>
-      <form method="post" action="{{ url_for('logout') }}" class="logout-form">
-        <button class="nav-link logout-link" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Logout</button>
-      </form>
-    </nav>
-    <main class="col-md-10 content">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for cat, msg in messages %}
-          <div class="alert alert-{{ cat if cat in ['success', 'info', 'warning', 'danger'] else 'info' }} alert-dismissible fade show">{{ msg }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>
-        {% endfor %}
-      {% endwith %}
-      {% block content %}{% endblock %}
-    </main>
+
+<!-- ===== TOP HEADER ===== -->
+<header class="top-header d-flex align-items-center justify-content-between px-3">
+  <div class="d-flex align-items-center gap-3">
+    <button class="sidebar-toggle btn btn-sm p-0" id="sidebarToggle" title="Toggle menu">
+      <i class="bi bi-list fs-5"></i>
+    </button>
+    <div class="header-brand">
+      <span class="header-brand-name">Sona Travel Agency</span>
+      <span class="header-brand-sub">Billing &amp; Management Portal</span>
+    </div>
   </div>
+  <div class="d-flex align-items-center gap-3">
+    <div class="header-user d-flex align-items-center gap-2">
+      <div class="user-avatar">
+        <i class="bi bi-person-fill"></i>
+      </div>
+      <div class="user-info d-none d-sm-block">
+        <div class="user-name">{{ session.get('admin_username', 'Admin') }}</div>
+        <div class="user-role">Administrator</div>
+      </div>
+    </div>
+    <form method="post" action="{{ url_for('logout') }}" class="m-0">
+      <button class="btn btn-sm btn-outline-light" type="submit" title="Logout">
+        <i class="bi bi-box-arrow-right me-1"></i><span class="d-none d-sm-inline">Logout</span>
+      </button>
+    </form>
+  </div>
+</header>
+
+<!-- ===== LAYOUT ===== -->
+<div class="app-layout">
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="mainSidebar">
+    <ul class="nav flex-column sidebar-nav">
+      {% set p = request.path %}
+
+      <!-- Dashboard -->
+      <li class="nav-item">
+        <a class="nav-link {% if p == '/' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+          <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+        </a>
+      </li>
+
+      <!-- Invoices (expandable) -->
+      <li class="nav-item">
+        <a class="nav-link nav-parent {% if '/invoice' in p %}active open{% endif %}"
+           data-bs-toggle="collapse" href="#menuInvoices" role="button"
+           aria-expanded="{{ 'true' if '/invoice' in p else 'false' }}">
+          <i class="bi bi-receipt"></i><span>Invoices</span>
+          <i class="bi bi-chevron-right nav-arrow ms-auto"></i>
+        </a>
+        <div class="collapse {% if '/invoice' in p %}show{% endif %}" id="menuInvoices">
+          <ul class="nav flex-column nav-sub">
+            <li>
+              <a class="nav-link {% if '/invoice/new' in p %}active{% endif %}" href="{{ url_for('new_invoice') }}">
+                <i class="bi bi-file-earmark-plus"></i><span>New Invoice</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link {% if p == '/invoices' %}active{% endif %}" href="{{ url_for('invoices') }}">
+                <i class="bi bi-list-ul"></i><span>Invoice List</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </li>
+
+      <!-- Customers -->
+      <li class="nav-item">
+        <a class="nav-link {% if p.startswith('/customers') %}active{% endif %}" href="{{ url_for('customers') }}">
+          <i class="bi bi-people"></i><span>Customers</span>
+        </a>
+      </li>
+
+      <!-- Agencies -->
+      <li class="nav-item">
+        <a class="nav-link {% if p.startswith('/agencies') %}active{% endif %}" href="{{ url_for('agencies') }}">
+          <i class="bi bi-building"></i><span>Agencies</span>
+        </a>
+      </li>
+
+      <!-- Reports (expandable) -->
+      <li class="nav-item">
+        <a class="nav-link nav-parent {% if p.startswith('/reports') %}active open{% endif %}"
+           data-bs-toggle="collapse" href="#menuReports" role="button"
+           aria-expanded="{{ 'true' if p.startswith('/reports') else 'false' }}">
+          <i class="bi bi-bar-chart-line"></i><span>Reports</span>
+          <i class="bi bi-chevron-right nav-arrow ms-auto"></i>
+        </a>
+        <div class="collapse {% if p.startswith('/reports') %}show{% endif %}" id="menuReports">
+          <ul class="nav flex-column nav-sub">
+            <li>
+              <a class="nav-link {% if p == '/reports' or p == '/reports/summary' %}active{% endif %}" href="{{ url_for('reports_summary') }}">
+                <i class="bi bi-clipboard-data"></i><span>Invoice Summary</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link {% if p == '/reports/monthly' %}active{% endif %}" href="{{ url_for('reports_monthly') }}">
+                <i class="bi bi-calendar3"></i><span>Monthly Revenue</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link {% if p == '/reports/customers' %}active{% endif %}" href="{{ url_for('reports_customers') }}">
+                <i class="bi bi-person-lines-fill"></i><span>Customer Report</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </li>
+
+      <!-- Admin (expandable) -->
+      <li class="nav-item">
+        <a class="nav-link nav-parent {% if p.startswith('/users') %}active open{% endif %}"
+           data-bs-toggle="collapse" href="#menuAdmin" role="button"
+           aria-expanded="{{ 'true' if p.startswith('/users') else 'false' }}">
+          <i class="bi bi-shield-lock"></i><span>Admin</span>
+          <i class="bi bi-chevron-right nav-arrow ms-auto"></i>
+        </a>
+        <div class="collapse {% if p.startswith('/users') %}show{% endif %}" id="menuAdmin">
+          <ul class="nav flex-column nav-sub">
+            <li>
+              <a class="nav-link {% if p.startswith('/users') %}active{% endif %}" href="{{ url_for('users') }}">
+                <i class="bi bi-person-gear"></i><span>User Management</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </li>
+
+    </ul>
+
+    <div class="sidebar-footer">
+      <small class="text-muted">© 2025 Sona Travel Agency</small>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="mainContent">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat if cat in ['success', 'info', 'warning', 'danger'] else 'info' }} alert-dismissible fade show mx-0 mt-0 mb-3 rounded-3">
+          {{ msg }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Sidebar toggle
+  const toggleBtn = document.getElementById('sidebarToggle');
+  const sidebar   = document.getElementById('mainSidebar');
+  const content   = document.getElementById('mainContent');
+
+  toggleBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+    content.classList.toggle('expanded');
+  });
+
+  // Rotate chevrons on expand/collapse
+  document.querySelectorAll('.nav-parent').forEach(link => {
+    const target = document.querySelector(link.getAttribute('href'));
+    if (!target) return;
+    target.addEventListener('show.bs.collapse',  () => link.classList.add('open'));
+    target.addEventListener('hide.bs.collapse',  () => link.classList.remove('open'));
+  });
+</script>
 {% block scripts %}{% endblock %}
 </body>
 {% endblock %}

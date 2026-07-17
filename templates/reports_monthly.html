@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Monthly Revenue — Reports{% endblock %}
+{% block content %}
+<div class="page-title-bar">
+  <h3><i class="bi bi-calendar3 me-2 text-accent"></i>Monthly Revenue</h3>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('reports_summary') }}">Invoice Summary</a>
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('reports_customers') }}">Customer Report</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-white py-3">
+    <strong>Month-wise Revenue</strong>
+    <span class="badge bg-secondary ms-2">Last 24 months</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th class="text-center">Invoices</th>
+          <th class="text-end">Revenue (₹)</th>
+          <th style="width:35%">Bar</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% if rows %}
+        {% set max_rev = rows | map(attribute=3) | max %}
+        {% for row in rows %}
+          {% set pct = ((row[3] / max_rev) * 100) | int if max_rev > 0 else 0 %}
+          <tr>
+            <td><strong>{{ row[1] }}</strong></td>
+            <td class="text-center">{{ row[2] }}</td>
+            <td class="text-end fw-semibold">₹{{ "%.2f"|format(row[3]) }}</td>
+            <td>
+              <div class="progress" style="height:10px; border-radius:5px;">
+                <div class="progress-bar" role="progressbar"
+                     style="width:{{ pct }}%; background:var(--accent);"
+                     aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr><td colspan="4" class="text-center text-muted py-4">No invoice data available.</td></tr>
+      {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -8,25 +8,26 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
 from sqlalchemy import or_
 
-from models import db, Agency, Customer, Invoice, Passenger
+from models import db, Agency, Customer, Invoice, Passenger, User
 from utils import next_invoice_number, compute_totals
 from pdf_generator import generate_invoice_pdf, BASE_DIR
 
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# PostgreSQL connection. Configure via DATABASE_URL, e.g.
-#   postgresql+psycopg2://user:password@localhost:5432/travel_billing
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgresql+psycopg2://postgres:12345@localhost:5432/travel_billing",
-)
+# PostgreSQL connection. Configure via DATABASE_URL env var.
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL environment variable is not set. "
+        "Please configure it before starting the app."
+    )
 # SQLAlchemy expects the "postgresql://" or "postgresql+psycopg2://" scheme.
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-in-prod")
+app.config["SECRET_KEY"] = os.environ.get("SESSION_SECRET", os.environ.get("SECRET_KEY", "change-me-in-prod"))
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["UPLOAD_FOLDER"] = UPLOAD_DIR
@@ -59,10 +60,15 @@ def _is_safe_next(target):
 
 
 def _valid_login(username, password):
+    # Check DB users first
+    user = User.query.filter_by(username=username, is_active=True).first()
+    if user:
+        return user.check_password(password)
+
+    # Fall back to env-var admin credentials
     expected_username = app.config["ADMIN_USERNAME"]
     if username != expected_username:
         return False
-
     password_hash = app.config["ADMIN_PASSWORD_HASH"]
     if password_hash:
         return check_password_hash(password_hash, password)
@@ -157,8 +163,10 @@ def dashboard():
     monthly = db.session.query(db.func.coalesce(db.func.sum(Invoice.total_amount), 0)) \
         .filter(Invoice.invoice_date >= month_start).scalar()
     recent = Invoice.query.order_by(Invoice.id.desc()).limit(10).all()
+    customer_count = Customer.query.count()
     return render_template("dashboard.html",
-                           total=total, monthly=monthly, recent=recent)
+                           total=total, monthly=monthly, recent=recent,
+                           customer_count=customer_count)
 
 
 # ---------------- AGENCIES ----------------
@@ -303,7 +311,6 @@ def save_invoice():
     iid = f.get("id")
     inv = Invoice.query.get(int(iid)) if iid else Invoice()
 
-    # Customer: existing or new
     customer_id = f.get("customer_id")
     if customer_id:
         customer = Customer.query.get(int(customer_id))
@@ -354,7 +361,6 @@ def save_invoice():
         db.session.add(inv)
     db.session.flush()
 
-    # Passengers: wipe & re-add
     for p in list(inv.passengers):
         db.session.delete(p)
     names = request.form.getlist("passenger_name")
@@ -412,5 +418,134 @@ def invoice_download(iid):
     )
 
 
+# ---------------- USER MANAGEMENT ----------------
+@app.route("/users")
+def users():
+    all_users = User.query.order_by(User.username).all()
+    return render_template("users.html", users=all_users)
+
+
+@app.route("/users/save", methods=["POST"])
+def save_user():
+    f = request.form
+    uid = f.get("id")
+    username = f.get("username", "").strip().lower()
+    display_name = f.get("display_name", "").strip()
+    email = f.get("email", "").strip()
+    role = f.get("role", "staff")
+    is_active = bool(f.get("is_active"))
+    password = f.get("password", "")
+
+    if uid:
+        u = User.query.get_or_404(int(uid))
+        # Don't allow changing the last active admin to inactive
+        if u.role == "admin" and role != "admin":
+            admin_count = User.query.filter_by(role="admin", is_active=True).count()
+            if admin_count <= 1:
+                flash("Cannot remove the last admin user.", "danger")
+                return redirect(url_for("users"))
+        u.username = username
+        u.display_name = display_name
+        u.email = email
+        u.role = role
+        u.is_active = is_active
+        if password:
+            u.set_password(password)
+    else:
+        if not password:
+            flash("Password is required for a new user.", "danger")
+            return redirect(url_for("users"))
+        if User.query.filter_by(username=username).first():
+            flash(f"Username '{username}' is already taken.", "danger")
+            return redirect(url_for("users"))
+        u = User(username=username, display_name=display_name,
+                 email=email, role=role, is_active=is_active)
+        u.set_password(password)
+        db.session.add(u)
+
+    db.session.commit()
+    flash("User saved.", "success")
+    return redirect(url_for("users"))
+
+
+@app.route("/users/<int:uid>/delete", methods=["POST"])
+def delete_user(uid):
+    u = User.query.get_or_404(uid)
+    if u.role == "admin":
+        admin_count = User.query.filter_by(role="admin", is_active=True).count()
+        if admin_count <= 1:
+            flash("Cannot delete the last admin user.", "danger")
+            return redirect(url_for("users"))
+    db.session.delete(u)
+    db.session.commit()
+    flash("User deleted.", "success")
+    return redirect(url_for("users"))
+
+
+# ---------------- REPORTS ----------------
+@app.route("/reports")
+@app.route("/reports/summary")
+def reports_summary():
+    # Overall totals
+    total_invoices = Invoice.query.count()
+    total_revenue = db.session.query(
+        db.func.coalesce(db.func.sum(Invoice.total_amount), 0)
+    ).scalar()
+    total_customers = Customer.query.count()
+
+    # This month
+    now = datetime.utcnow()
+    month_start = date(now.year, now.month, 1)
+    month_invoices = Invoice.query.filter(Invoice.invoice_date >= month_start).count()
+    month_revenue = db.session.query(
+        db.func.coalesce(db.func.sum(Invoice.total_amount), 0)
+    ).filter(Invoice.invoice_date >= month_start).scalar()
+
+    # Top 10 recent invoices
+    recent = Invoice.query.order_by(Invoice.id.desc()).limit(10).all()
+
+    return render_template("reports_summary.html",
+                           total_invoices=total_invoices,
+                           total_revenue=total_revenue,
+                           total_customers=total_customers,
+                           month_invoices=month_invoices,
+                           month_revenue=month_revenue,
+                           recent=recent)
+
+
+@app.route("/reports/monthly")
+def reports_monthly():
+    # Group by year-month
+    rows = db.session.execute(db.text("""
+        SELECT
+            TO_CHAR(invoice_date, 'YYYY-MM') AS ym,
+            TO_CHAR(invoice_date, 'Mon YYYY') AS label,
+            COUNT(*) AS cnt,
+            COALESCE(SUM(total_amount), 0) AS revenue
+        FROM invoices
+        GROUP BY ym, label
+        ORDER BY ym DESC
+        LIMIT 24
+    """)).fetchall()
+    return render_template("reports_monthly.html", rows=rows)
+
+
+@app.route("/reports/customers")
+def reports_customers():
+    rows = db.session.execute(db.text("""
+        SELECT
+            c.id,
+            c.company_name,
+            c.state,
+            COUNT(i.id) AS invoice_count,
+            COALESCE(SUM(i.total_amount), 0) AS total_spent
+        FROM customers c
+        LEFT JOIN invoices i ON i.customer_id = c.id
+        GROUP BY c.id, c.company_name, c.state
+        ORDER BY total_spent DESC
+    """)).fetchall()
+    return render_template("reports_customers.html", rows=rows)
+
+
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)

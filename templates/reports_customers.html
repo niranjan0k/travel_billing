@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Customer Report — Reports{% endblock %}
+{% block content %}
+<div class="page-title-bar">
+  <h3><i class="bi bi-person-lines-fill me-2 text-accent"></i>Customer Report</h3>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('reports_summary') }}">Invoice Summary</a>
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('reports_monthly') }}">Monthly Revenue</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-white py-3">
+    <strong>Customer-wise Billing</strong>
+    <span class="badge bg-secondary ms-2">{{ rows|length }} customers</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Customer</th>
+          <th>State</th>
+          <th class="text-center">Invoices</th>
+          <th class="text-end">Total Spent (₹)</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for row in rows %}
+        <tr>
+          <td class="text-muted">{{ loop.index }}</td>
+          <td><strong>{{ row[1] }}</strong></td>
+          <td>{{ row[2] or '—' }}</td>
+          <td class="text-center">
+            <span class="badge bg-primary">{{ row[3] }}</span>
+          </td>
+          <td class="text-end fw-semibold">₹{{ "%.2f"|format(row[4]) }}</td>
+          <td>
+            <a class="btn btn-sm btn-outline-secondary"
+               href="{{ url_for('invoices', customer_id=row[0]) }}">
+              <i class="bi bi-receipt me-1"></i>Invoices
+            </a>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">No customer data available.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — Sona Travel Agency{% endblock %}
+{% block title %}Invoice Summary — Reports{% endblock %}
 {% block content %}
 <div class="page-title-bar">
-  <h3><i class="bi bi-speedometer2 me-2 text-accent"></i>Dashboard</h3>
-  <a class="btn btn-accent" href="{{ url_for('new_invoice') }}">
-    <i class="bi bi-plus-lg me-1"></i>New Invoice
-  </a>
+  <h3><i class="bi bi-clipboard-data me-2 text-accent"></i>Invoice Summary</h3>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('reports_monthly') }}">Monthly Revenue</a>
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('reports_customers') }}">Customer Report</a>
+  </div>
 </div>
 
 <!-- KPI Cards -->
@@ -18,7 +19,7 @@
         </div>
         <div>
           <div class="stat-label">Total Invoices</div>
-          <div class="stat-value">{{ total }}</div>
+          <div class="stat-value">{{ total_invoices }}</div>
         </div>
       </div>
     </div>
@@ -30,8 +31,21 @@
           <i class="bi bi-currency-rupee"></i>
         </div>
         <div>
-          <div class="stat-label">Revenue this month</div>
-          <div class="stat-value" style="font-size:1.4rem;">₹{{ "%.0f"|format(monthly or 0) }}</div>
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-value" style="font-size:1.4rem;">₹{{ "%.0f"|format(total_revenue) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card card-stat p-3">
+      <div class="stat-icon-card">
+        <div class="stat-icon" style="background:#fefce8; color:#ca8a04;">
+          <i class="bi bi-calendar-month"></i>
+        </div>
+        <div>
+          <div class="stat-label">This Month</div>
+          <div class="stat-value" style="font-size:1.4rem;">₹{{ "%.0f"|format(month_revenue) }}</div>
         </div>
       </div>
     </div>
@@ -43,32 +57,19 @@
           <i class="bi bi-people"></i>
         </div>
         <div>
-          <div class="stat-label">Total Customers</div>
-          <div class="stat-value">{{ customer_count }}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col-sm-6 col-lg-3">
-    <div class="card card-stat p-3">
-      <div class="stat-icon-card">
-        <div class="stat-icon" style="background:#fff7ed; color:#ea580c;">
-          <i class="bi bi-bar-chart-line"></i>
-        </div>
-        <div>
-          <div class="stat-label">Quick Reports</div>
-          <a class="btn btn-sm btn-accent mt-1" href="{{ url_for('reports_summary') }}">View Reports</a>
+          <div class="stat-label">Customers</div>
+          <div class="stat-value">{{ total_customers }}</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Recent Invoices -->
+<!-- Recent Invoices table -->
 <div class="card">
-  <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+  <div class="card-header bg-white py-3">
     <strong>Recent Invoices</strong>
-    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('invoices') }}">View All</a>
+    <span class="badge bg-secondary ms-2">Last 10</span>
   </div>
   <div class="table-responsive">
     <table class="table table-striped mb-0 align-middle">
@@ -78,7 +79,9 @@
           <th>Date</th>
           <th>Customer</th>
           <th>Route</th>
-          <th class="text-end">Amount</th>
+          <th>Type</th>
+          <th class="text-end">Fare</th>
+          <th class="text-end">Total</th>
           <th></th>
         </tr>
       </thead>
@@ -89,15 +92,17 @@
           <td>{{ inv.invoice_date.strftime('%d-%m-%Y') }}</td>
           <td>{{ inv.customer.company_name if inv.customer else '—' }}</td>
           <td>{{ inv.travel_from }} → {{ inv.travel_to }}</td>
-          <td class="text-end fw-semibold">₹{{ "%.2f"|format(inv.total_amount or 0) }}</td>
+          <td><span class="badge bg-info text-dark">{{ inv.travel_type }}</span></td>
+          <td class="text-end">₹{{ "%.2f"|format(inv.ticket_fare or 0) }}</td>
+          <td class="text-end fw-bold">₹{{ "%.2f"|format(inv.total_amount or 0) }}</td>
           <td>
-            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('invoice_pdf', iid=inv.id) }}" target="_blank">
-              <i class="bi bi-file-pdf"></i>
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('edit_invoice', iid=inv.id) }}">
+              <i class="bi bi-pencil"></i>
             </a>
           </td>
         </tr>
       {% else %}
-        <tr><td colspan="6" class="text-center text-muted py-4">No invoices yet. <a href="{{ url_for('new_invoice') }}">Create one →</a></td></tr>
+        <tr><td colspan="8" class="text-center text-muted py-4">No invoices yet.</td></tr>
       {% endfor %}
       </tbody>
     </table>
