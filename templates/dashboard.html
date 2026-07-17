@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="mb-0">Dashboard</h3>
+  <div>
+    <a class="btn btn-accent" href="{{ url_for('new_invoice') }}"><i class="bi bi-plus-lg"></i> New Invoice</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('customers') }}">Customers</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('agencies') }}">Agencies</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4"><div class="card card-stat p-3"><div class="stat-label">Total Invoices</div><div class="stat-value">{{ total }}</div></div></div>
+  <div class="col-md-4"><div class="card card-stat p-3"><div class="stat-label">Revenue this month</div><div class="stat-value">₹ {{ "%.2f"|format(monthly or 0) }}</div></div></div>
+  <div class="col-md-4"><div class="card card-stat p-3"><div class="stat-label">Quick Action</div><a class="btn btn-accent mt-2" href="{{ url_for('new_invoice') }}">Create Invoice</a></div></div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-white"><strong>Recent Invoices</strong></div>
+  <div class="table-responsive">
+    <table class="table table-striped mb-0">
+      <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Route</th><th class="text-end">Amount</th><th></th></tr></thead>
+      <tbody>
+      {% for inv in recent %}
+        <tr>
+          <td>{{ inv.invoice_number }}</td>
+          <td>{{ inv.invoice_date.strftime('%d-%m-%Y') }}</td>
+          <td>{{ inv.customer.company_name if inv.customer else '-' }}</td>
+          <td>{{ inv.travel_from }} → {{ inv.travel_to }}</td>
+          <td class="text-end">₹ {{ "%.2f"|format(inv.total_amount or 0) }}</td>
+          <td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('invoice_pdf', iid=inv.id) }}" target="_blank"><i class="bi bi-file-pdf"></i></a></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">No invoices yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Customers{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Customers</h3>
+  <button class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#custModal" onclick="resetCust()"><i class="bi bi-plus-lg"></i> Add Customer</button>
+</div>
+
+<form class="mb-3" method="get">
+  <div class="input-group" style="max-width:400px">
+    <input class="form-control" name="q" value="{{ q }}" placeholder="Search by name, GST, state">
+    <button class="btn btn-outline-secondary">Search</button>
+  </div>
+</form>
+
+<div class="card"><div class="table-responsive"><table class="table mb-0">
+<thead><tr><th>Company</th><th>GST</th><th>State</th><th>Contact</th><th>Mobile</th><th></th></tr></thead>
+<tbody>
+{% for c in customers %}
+<tr>
+  <td><strong>{{ c.company_name }}</strong><br><small class="text-muted">{{ c.address }}</small></td>
+  <td>{{ c.gst_no }}</td>
+  <td>{{ c.state }} ({{ c.state_code }})</td>
+  <td>{{ c.contact_person }}</td>
+  <td>{{ c.mobile }}</td>
+  <td class="text-end">
+    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#custModal"
+      onclick='loadCust({{ {"id":c.id,"company_name":c.company_name,"address":c.address,"gst_no":c.gst_no,"state":c.state,"state_code":c.state_code,"contact_person":c.contact_person,"mobile":c.mobile,"email":c.email} | tojson }})'>Edit</button>
+    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('invoices', customer_id=c.id) }}">Invoices</a>
+    <form method="post" action="{{ url_for('delete_customer', cid=c.id) }}" class="d-inline" onsubmit="return confirm('Delete customer?')">
+      <button class="btn btn-sm btn-outline-danger">Delete</button>
+    </form>
+  </td>
+</tr>
+{% else %}
+<tr><td colspan="6" class="text-center text-muted py-4">No customers.</td></tr>
+{% endfor %}
+</tbody></table></div></div>
+
+<div class="modal fade" id="custModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+<form method="post" action="{{ url_for('save_customer') }}">
+<div class="modal-header"><h5 class="modal-title">Customer</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body">
+<input type="hidden" name="id" id="c_id">
+<div class="row g-2">
+  <div class="col-md-8"><label class="form-label">Company Name</label><input name="company_name" id="c_company_name" class="form-control" required></div>
+  <div class="col-md-4"><label class="form-label">GST No.</label><input name="gst_no" id="c_gst_no" class="form-control"></div>
+  <div class="col-12"><label class="form-label">Address</label><input name="address" id="c_address" class="form-control"></div>
+  <div class="col-md-6"><label class="form-label">State</label><input name="state" id="c_state" class="form-control"></div>
+  <div class="col-md-3"><label class="form-label">State Code</label><input name="state_code" id="c_state_code" class="form-control"></div>
+  <div class="col-md-3"><label class="form-label">Mobile</label><input name="mobile" id="c_mobile" class="form-control"></div>
+  <div class="col-md-6"><label class="form-label">Contact Person</label><input name="contact_person" id="c_contact_person" class="form-control"></div>
+  <div class="col-md-6"><label class="form-label">Email</label><input name="email" id="c_email" class="form-control"></div>
+</div>
+</div>
+<div class="modal-footer"><button class="btn btn-accent">Save</button></div>
+</form>
+</div></div></div>
+
+<script>
+function resetCust(){ document.querySelectorAll('#custModal input').forEach(i => i.value=''); }
+function loadCust(c){ for(const k in c){ const el=document.getElementById('c_'+k); if(el) el.value=c[k]||''; } }
+</script>
+{% endblock %}

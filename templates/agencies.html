@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Agencies{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Agency Profiles</h3>
+  <button class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#agencyModal" onclick="resetAgency()"><i class="bi bi-plus-lg"></i> Add Agency</button>
+</div>
+
+<div class="card"><div class="table-responsive"><table class="table mb-0">
+<thead><tr><th>Name</th><th>City</th><th>GST</th><th>Mobile</th><th>Default</th><th></th></tr></thead>
+<tbody>
+{% for a in agencies %}
+<tr>
+  <td><strong>{{ a.name }}</strong></td>
+  <td>{{ a.city }}, {{ a.state }}</td>
+  <td>{{ a.gst_no }}</td>
+  <td>{{ a.mobile1 }}</td>
+  <td>{% if a.is_default %}<span class="badge bg-success">Default</span>{% endif %}</td>
+  <td class="text-end">
+    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#agencyModal"
+      onclick='loadAgency({{ {
+        "id":a.id,"name":a.name,"address":a.address,"city":a.city,"state":a.state,"pincode":a.pincode,
+        "mobile1":a.mobile1,"mobile2":a.mobile2,"gst_no":a.gst_no,"msme_no":a.msme_no,
+        "bank_name":a.bank_name,"account_no":a.account_no,"ifsc":a.ifsc,"branch":a.branch,
+        "upi_id":a.upi_id,"is_default":a.is_default} | tojson }})'>Edit</button>
+    <form method="post" action="{{ url_for('delete_agency', aid=a.id) }}" class="d-inline" onsubmit="return confirm('Delete this agency?')">
+      <button class="btn btn-sm btn-outline-danger">Delete</button>
+    </form>
+  </td>
+</tr>
+{% endfor %}
+</tbody></table></div></div>
+
+<div class="modal fade" id="agencyModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+<form method="post" action="{{ url_for('save_agency') }}" enctype="multipart/form-data">
+<div class="modal-header"><h5 class="modal-title">Agency</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body">
+<input type="hidden" name="id" id="ag_id">
+<div class="row g-2">
+  <div class="col-md-8"><label class="form-label">Name</label><input name="name" id="ag_name" class="form-control" required></div>
+  <div class="col-md-4"><label class="form-label">GST No.</label><input name="gst_no" id="ag_gst_no" class="form-control"></div>
+  <div class="col-12"><label class="form-label">Address</label><input name="address" id="ag_address" class="form-control"></div>
+  <div class="col-md-4"><label class="form-label">City</label><input name="city" id="ag_city" class="form-control"></div>
+  <div class="col-md-4"><label class="form-label">State</label><input name="state" id="ag_state" class="form-control"></div>
+  <div class="col-md-4"><label class="form-label">Pincode</label><input name="pincode" id="ag_pincode" class="form-control"></div>
+  <div class="col-md-6"><label class="form-label">Mobile 1</label><input name="mobile1" id="ag_mobile1" class="form-control"></div>
+  <div class="col-md-6"><label class="form-label">Mobile 2</label><input name="mobile2" id="ag_mobile2" class="form-control"></div>
+  <div class="col-md-6"><label class="form-label">MSME No.</label><input name="msme_no" id="ag_msme_no" class="form-control"></div>
+  <div class="col-md-6"><label class="form-label">UPI ID</label><input name="upi_id" id="ag_upi_id" class="form-control"></div>
+  <hr class="my-3">
+  <div class="col-md-6"><label class="form-label">Bank Name</label><input name="bank_name" id="ag_bank_name" class="form-control"></div>
+  <div class="col-md-6"><label class="form-label">A/c No.</label><input name="account_no" id="ag_account_no" class="form-control"></div>
+  <div class="col-md-6"><label class="form-label">IFSC</label><input name="ifsc" id="ag_ifsc" class="form-control"></div>
+  <div class="col-md-6"><label class="form-label">Branch</label><input name="branch" id="ag_branch" class="form-control"></div>
+  <div class="col-md-6"><label class="form-label">Logo (image)</label><input type="file" name="logo" class="form-control" accept="image/*"></div>
+  <div class="col-md-6"><label class="form-label">Stamp (image)</label><input type="file" name="stamp" class="form-control" accept="image/*"></div>
+  <div class="col-12"><div class="form-check mt-2"><input type="checkbox" class="form-check-input" name="is_default" id="ag_is_default"><label class="form-check-label" for="ag_is_default">Set as default agency</label></div></div>
+</div>
+</div>
+<div class="modal-footer"><button class="btn btn-accent">Save</button></div>
+</form>
+</div></div></div>
+
+<script>
+function resetAgency(){ document.querySelectorAll('#agencyModal input').forEach(i => { if(i.type!=='file') i.value=''; }); document.getElementById('ag_is_default').checked=false; }
+function loadAgency(a){ for(const k in a){ const el=document.getElementById('ag_'+k); if(!el) continue; if(el.type==='checkbox') el.checked=!!a[k]; else el.value=a[k]||''; } }
+</script>
+{% endblock %}

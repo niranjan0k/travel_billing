@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if invoice else 'New' }} Invoice{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>{{ 'Edit Invoice' if invoice else 'New Invoice' }}</h3>
+  <a class="btn btn-outline-secondary" href="{{ url_for('invoices') }}">Back</a>
+</div>
+
+<form method="post" action="{{ url_for('save_invoice') }}" id="invForm">
+{% if invoice %}<input type="hidden" name="id" value="{{ invoice.id }}">{% endif %}
+
+<div class="row g-3">
+  <div class="col-md-6"><div class="card"><div class="card-body">
+    <h6 class="text-accent">Agency</h6>
+    <select class="form-select" name="agency_id" required>
+      {% for a in agencies %}
+      <option value="{{ a.id }}" {% if (invoice and invoice.agency_id==a.id) or (not invoice and default_agency and default_agency.id==a.id) %}selected{% endif %}>{{ a.name }}</option>
+      {% endfor %}
+    </select>
+  </div></div></div>
+
+  <div class="col-md-6"><div class="card"><div class="card-body">
+    <h6 class="text-accent">Customer</h6>
+    <select class="form-select mb-2" name="customer_id" id="customer_id" onchange="toggleNewCust()">
+      <option value="">Select or Fill below for New Customer</option>
+      {% for c in customers %}
+      <option value="{{ c.id }}" {% if invoice and invoice.customer_id==c.id %}selected{% endif %}>{{ c.company_name }}</option>
+      {% endfor %}
+    </select>
+    <div id="newCustBlock" class="row g-2">
+      <div class="col-12"><input class="form-control" name="cust_name" placeholder="Company name"></div>
+      <div class="col-12"><input class="form-control" name="cust_address" placeholder="Address"></div>
+      <div class="col-6"><input class="form-control" name="cust_gst" placeholder="GST No."></div>
+      <div class="col-4"><input class="form-control" name="cust_state" placeholder="State"></div>
+      <div class="col-2"><input class="form-control" name="cust_state_code" placeholder="Code"></div>
+    </div>
+  </div></div></div>
+</div>
+
+<div class="card mt-3"><div class="card-body">
+  <h6 class="text-accent">Invoice Details</h6>
+  <div class="row g-2">
+    <div class="col-md-3"><label class="form-label">Invoice Number</label><input class="form-control" name="invoice_number" value="{{ invoice.invoice_number if invoice else proposed_number }}" required></div>
+    <div class="col-md-3"><label class="form-label">Invoice Date</label><input type="date" class="form-control" name="invoice_date" value="{{ invoice.invoice_date.isoformat() if invoice and invoice.invoice_date else today }}" required></div>
+    <div class="col-md-3"><label class="form-label">Order Number</label><input class="form-control" name="order_number" value="{{ invoice.order_number if invoice else '' }}"></div>
+    <div class="col-md-3"><label class="form-label">Order Date</label><input type="date" class="form-control" name="order_date" value="{{ invoice.order_date.isoformat() if invoice and invoice.order_date else '' }}"></div>
+
+    <div class="col-md-3"><label class="form-label">Journey Date</label><input type="date" class="form-control" name="journey_date" value="{{ invoice.journey_date.isoformat() if invoice and invoice.journey_date else '' }}"></div>
+    <div class="col-md-3"><label class="form-label">PNR No.</label><input class="form-control" name="pnr_no" value="{{ invoice.pnr_no if invoice else '' }}"></div>
+    <div class="col-md-3"><label class="form-label">Travel From</label><input class="form-control" name="travel_from" value="{{ invoice.travel_from if invoice else '' }}"></div>
+    <div class="col-md-3"><label class="form-label">Travel To</label><input class="form-control" name="travel_to" value="{{ invoice.travel_to if invoice else '' }}"></div>
+
+    <div class="col-md-3"><label class="form-label">Travel Type</label>
+      <select class="form-select" name="travel_type">
+        {% set tt = invoice.travel_type if invoice else 'TATKAL' %}
+        <option {% if tt=='TATKAL' %}selected{% endif %}>TATKAL</option>
+        <option {% if tt=='NORMAL' %}selected{% endif %}>NORMAL</option>
+      </select>
+    </div>
+    <div class="col-md-3"><label class="form-label">Train Number</label><input class="form-control" name="train_number" value="{{ invoice.train_number if invoice else '' }}"></div>
+    <div class="col-md-3"><label class="form-label">Class</label><input class="form-control" name="travel_class" value="{{ invoice.travel_class if invoice else 'SLEEPER' }}"></div>
+    <div class="col-md-3"><label class="form-label">Description (auto if blank)</label>
+      <textarea class="form-control" name="description">{{ invoice.description if invoice else '' }}</textarea>
+    </div>
+  </div>
+</div></div>
+
+<div class="card mt-3"><div class="card-body">
+  <h6 class="text-accent d-flex justify-content-between">Passengers <button type="button" class="btn btn-sm btn-accent" onclick="addPax()"><i class="bi bi-plus"></i> Add</button></h6>
+  <div id="paxWrap">
+    {% if passengers %}
+      {% for p in passengers %}
+      <div class="passenger-row"><input class="form-control" name="passenger_name" value="{{ p.name }}" placeholder="Passenger name"><button type="button" class="btn btn-outline-danger" onclick="this.parentNode.remove()">×</button></div>
+      {% endfor %}
+    {% else %}
+      <div class="passenger-row"><input class="form-control" name="passenger_name" placeholder="Passenger name"><button type="button" class="btn btn-outline-danger" onclick="this.parentNode.remove()">×</button></div>
+    {% endif %}
+  </div>
+</div></div>
+
+<div class="card mt-3"><div class="card-body">
+  <h6 class="text-accent">Amounts</h6>
+  <div class="row g-2">
+    <div class="col-md-3"><label class="form-label">Ticket Fare</label><input type="number" step="0.01" class="form-control" id="fare" name="ticket_fare" value="{{ invoice.ticket_fare if invoice else 0 }}" oninput="recalc()"></div>
+    <div class="col-md-3"><label class="form-label">Service Charge</label><input type="number" step="0.01" class="form-control" id="svc" name="service_charge" value="{{ invoice.service_charge if invoice else 0 }}" oninput="recalc()"></div>
+    <div class="col-md-2"><label class="form-label">GST 18%</label><input class="form-control" id="gst" disabled></div>
+    <div class="col-md-2"><label class="form-label">Round off</label><input class="form-control" id="roff" disabled></div>
+    <div class="col-md-2"><label class="form-label">Total</label><input class="form-control fw-bold" id="tot" disabled></div>
+  </div>
+  <small class="text-muted">Note: SGST/CGST vs IGST is picked automatically at save time based on agency vs customer state.</small>
+</div></div>
+
+<div class="mt-3 d-flex gap-2">
+  <button class="btn btn-accent" name="action" value="save">Save Invoice</button>
+  <button class="btn btn-outline-primary" name="action" value="download">Save & Download PDF</button>
+</div>
+</form>
+
+<script>
+function addPax(){
+  const w=document.getElementById('paxWrap');
+  const row=document.createElement('div'); row.className='passenger-row';
+  row.innerHTML='<input class="form-control" name="passenger_name" placeholder="Passenger name"><button type="button" class="btn btn-outline-danger" onclick="this.parentNode.remove()">×</button>';
+  w.appendChild(row);
+}
+function toggleNewCust(){
+  const has=document.getElementById('customer_id').value;
+  document.getElementById('newCustBlock').style.display=has?'none':'flex';
+}
+function recalc(){
+  const f=parseFloat(document.getElementById('fare').value||0);
+  const s=parseFloat(document.getElementById('svc').value||0);
+  const gst=+(s*0.18).toFixed(2);
+  const raw=f+s+gst; const rounded=Math.round(raw);
+  document.getElementById('gst').value=gst.toFixed(2);
+  document.getElementById('roff').value=(rounded-raw).toFixed(2);
+  document.getElementById('tot').value=rounded.toFixed(2);
+}
+toggleNewCust(); recalc();
+</script>
+{% endblock %}
