@@ -78,29 +78,7 @@
         </div>
       </li>
 
-      <!-- Master (expandable) -->
-      <li class="nav-item">
-        <a class="nav-link nav-parent {% if p.startswith('/customers') or p.startswith('/agencies') %}active open{% endif %}"
-           data-bs-toggle="collapse" href="#menuMaster" role="button"
-           aria-expanded="{{ 'true' if p.startswith('/customers') or p.startswith('/agencies') else 'false' }}">
-          <i class="bi bi-database"></i><span>Master</span>
-          <i class="bi bi-chevron-right nav-arrow ms-auto"></i>
-        </a>
-        <div class="collapse {% if p.startswith('/customers') or p.startswith('/agencies') %}show{% endif %}" id="menuMaster">
-          <ul class="nav flex-column nav-sub">
-            <li>
-              <a class="nav-link {% if p.startswith('/customers') %}active{% endif %}" href="{{ url_for('customers') }}">
-                <i class="bi bi-people"></i><span>Customers</span>
-              </a>
-            </li>
-            <li>
-              <a class="nav-link {% if p.startswith('/agencies') %}active{% endif %}" href="{{ url_for('agencies') }}">
-                <i class="bi bi-building"></i><span>Agencies</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </li>
+      
 
       <!-- Reports (expandable) -->
       <li class="nav-item">
@@ -150,6 +128,29 @@
         </div>
       </li>
 
+      <!-- Master (expandable) -->
+      <li class="nav-item">
+        <a class="nav-link nav-parent {% if p.startswith('/customers') or p.startswith('/agencies') %}active open{% endif %}"
+           data-bs-toggle="collapse" href="#menuMaster" role="button"
+           aria-expanded="{{ 'true' if p.startswith('/customers') or p.startswith('/agencies') else 'false' }}">
+          <i class="bi bi-database"></i><span>Master</span>
+          <i class="bi bi-chevron-right nav-arrow ms-auto"></i>
+        </a>
+        <div class="collapse {% if p.startswith('/customers') or p.startswith('/agencies') %}show{% endif %}" id="menuMaster">
+          <ul class="nav flex-column nav-sub">
+            <li>
+              <a class="nav-link {% if p.startswith('/customers') %}active{% endif %}" href="{{ url_for('customers') }}">
+                <i class="bi bi-people"></i><span>Customers</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link {% if p.startswith('/agencies') %}active{% endif %}" href="{{ url_for('agencies') }}">
+                <i class="bi bi-building"></i><span>Agencies</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </li>
     </ul>
 
     <div class="sidebar-footer">

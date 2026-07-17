@@ -11,6 +11,9 @@ from sqlalchemy import or_
 from models import db, Agency, Customer, Invoice, Passenger, User
 from utils import next_invoice_number, compute_totals
 from pdf_generator import generate_invoice_pdf, BASE_DIR
+from dotenv import load_dotenv
+
+load_dotenv()
 
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
