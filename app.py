@@ -30,6 +30,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SESSION_SECRET", os.environ.get("SECRET_KEY", "change-me-in-prod"))
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.config["UPLOAD_FOLDER"] = UPLOAD_DIR
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 app.config["ADMIN_USERNAME"] = os.environ.get("ADMIN_USERNAME", "admin")
