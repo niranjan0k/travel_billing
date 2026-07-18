@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 {% block title %}{{ 'Edit' if invoice else 'New' }} Invoice{% endblock %}
-{% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h3>{{ 'Edit Invoice' if invoice else 'New Invoice' }}</h3>
-  <a class="btn btn-outline-secondary" href="{{ url_for('invoices') }}">Back</a>
-</div>
 
+{% block card_header_left %}{{ 'Edit Invoice' if invoice else 'New Invoice' }}{% endblock %}
+{% block card_header_right %}
+<a class="btn btn-outline-secondary" href="{{ url_for('invoices') }}">Back</a>
+{% endblock %}
+
+{% block content %}
 <form method="post" action="{{ url_for('save_invoice') }}" id="invForm">
 {% if invoice %}<input type="hidden" name="id" value="{{ invoice.id }}">{% endif %}
 

@@ -40,6 +40,10 @@ app.config["ADMIN_USERNAME"] = os.environ.get("ADMIN_USERNAME", "admin")
 app.config["ADMIN_PASSWORD"] = os.environ.get("ADMIN_PASSWORD", "admin123")
 app.config["ADMIN_PASSWORD_HASH"] = os.environ.get("ADMIN_PASSWORD_HASH", "")
 
+# create a default username and password for admin 
+
+
+
 db.init_app(app)
 
 
@@ -99,6 +103,25 @@ def prevent_admin_cache(response):
     return response
 
 
+def create_default_admin():
+    admin = User.query.filter_by(username="admin").first()
+    if not admin:
+        admin = User(
+            username="admin",
+            display_name="Administrator",
+            email="admin@example.com",
+            role="admin",
+            is_active=True,
+        )
+        admin.set_password("admin123")  # set a real password here
+        db.session.add(admin)
+        db.session.commit()
+        print("Default admin user created.")
+    else:
+        print("Admin user already exists, skipping creation.")
+
+
+
 def seed_default_agency():
     if Agency.query.count() == 0:
         a = Agency(
@@ -124,6 +147,7 @@ def seed_default_agency():
 
 with app.app_context():
     db.create_all()
+    create_default_admin()
     seed_default_agency()
 
 

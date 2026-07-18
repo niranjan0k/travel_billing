@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Customers{% endblock %}
-{% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h3>Customers</h3>
-  <button class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#custModal" onclick="resetCust()"><i class="bi bi-plus-lg"></i> Add Customer</button>
-</div>
 
+{% block card_header_left %}Customers{% endblock %}
+{% block card_header_right %}
+<button class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#custModal" onclick="resetCust()"><i class="bi bi-plus-lg"></i> Add Customer</button>
+{% endblock %}
+
+{% block content %}
 <form class="mb-3" method="get">
   <div class="input-group" style="max-width:400px">
     <input class="form-control" name="q" value="{{ q }}" placeholder="Search by name, GST, state">

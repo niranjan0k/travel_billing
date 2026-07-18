@@ -1,10 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Agencies{% endblock %}
+
+{% block card_header_left %}Agency Profiles{% endblock %}
+{% block card_header_right %}
+<button class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#agencyModal" onclick="resetAgency()"><i class="bi bi-plus-lg"></i> Add Agency</button>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h3>Agency Profiles</h3>
-  <button class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#agencyModal" onclick="resetAgency()"><i class="bi bi-plus-lg"></i> Add Agency</button>
-</div>
+
 
 <div class="card"><div class="table-responsive"><table class="table mb-0">
 <thead><tr><th>Name</th><th>City</th><th>GST</th><th>Mobile</th><th>Default</th><th></th></tr></thead>

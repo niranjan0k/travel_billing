@@ -168,7 +168,18 @@
         </div>
       {% endfor %}
     {% endwith %}
+    
+    <div class="card">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+    <h4>{% block card_header_left %}{% endblock %}</h4>
+    {% block card_header_right %}{% endblock %}
+    </div>
+  </div>
+  <div class="card-body">
     {% block content %}{% endblock %}
+  </div>
+</div>
   </main>
 </div>
 

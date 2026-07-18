@@ -56,7 +56,6 @@ class Invoice(db.Model):
     travel_class = db.Column(db.String(50))
     travel_type = db.Column(db.String(20), default="TATKAL")  # TATKAL / NORMAL
     description = db.Column(db.String(500))
-
     ticket_fare = db.Column(db.Float, default=0)
     service_charge = db.Column(db.Float, default=0)
     sgst_amount = db.Column(db.Float, default=0)

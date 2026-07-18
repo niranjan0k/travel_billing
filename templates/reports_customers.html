@@ -1,13 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Customer Report — Reports{% endblock %}
-{% block content %}
-<div class="page-title-bar">
-  <h3><i class="bi bi-person-lines-fill me-2 text-accent"></i>Customer Report</h3>
-  <div class="d-flex gap-2">
-    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('reports_summary') }}">Invoice Summary</a>
-    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('reports_monthly') }}">Monthly Revenue</a>
-  </div>
+
+{% block card_header_left %}<i class="bi bi-person-lines-fill me-2 text-accent"></i>Customer Report{% endblock %}
+{% block card_header_right %}
+<div class="d-flex gap-2">
+<a class="btn btn-outline-secondary btn-sm" href="{{ url_for('reports_summary') }}">Invoice Summary</a>
+<a class="btn btn-outline-secondary btn-sm" href="{{ url_for('reports_monthly') }}">Monthly Revenue</a>
 </div>
+{% endblock %}
+
+{% block content %}
 
 <div class="card">
   <div class="card-header bg-white py-3">

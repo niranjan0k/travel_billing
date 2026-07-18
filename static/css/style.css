@@ -155,7 +155,7 @@ body { background: var(--body-bg); margin: 0; padding: 0; }
 .main-content {
   flex: 1;
   margin-left: var(--sidebar-width);
-  padding: 1.5rem 1.75rem;
+  padding: 1rem;
   transition: margin-left .2s ease;
   min-width: 0;
 }
