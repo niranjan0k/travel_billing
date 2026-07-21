@@ -135,12 +135,26 @@ def _date(value):
     return value.strftime("%d/%m/%Y") if value else ""
 
 
-def _qr_image(upi_id):
+def _qr_image(upi_id, amount: float | str = None):
     static_qr = os.path.join(IMG_DIR, "upi-qr.jpg")
     # if os.path.exists(static_qr):
     #     return static_qr
     if not upi_id:
         return None
+
+    # Build UPI payment URL with amount if provided
+    upi_url = f"upi://pay?pa={upi_id}&pn=Agency"
+
+    if amount is not None:
+        # Convert to string and clean it
+        amount_str = str(amount).strip()
+        try:
+            # Validate and format amount (UPI accepts up to 2 decimal places)
+            amount_float = float(amount_str)
+            amount_str = f"{amount_float:.2f}"
+            upi_url += f"&am={amount_str}"
+        except ValueError:
+            print(f"Warning: Invalid amount '{amount}' - ignoring amount")
 
     qr = qrcode.QRCode(
         version=1,
@@ -148,7 +162,7 @@ def _qr_image(upi_id):
         box_size=10,
         border=2,  # small quiet zone kept for scannability; 0 can break scanning
     )
-    qr.add_data(f"upi://pay?pa={upi_id}&pn=Agency")
+    qr.add_data(upi_url)
     qr.make(fit=True)
 
     img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
@@ -382,10 +396,10 @@ def generate_invoice_pdf(invoice, agency, customer, passengers, output_path=None
     ]
     _draw_multiline(c, bank_lines, 62.1, 669.4, size=10.5, gap=14.0, bold_first=False, max_width=165)
     _rect(c, 238.2, 633.5, 388.3, 764.4, stroke=GRID)
-    _draw_image(c, _qr_image(agency.upi_id), 226.7, 641.3, 172, 115.3)
+    _draw_image(c, _qr_image(agency.upi_id, invoice.total_amount or 0), 226.7, 641.3, 172, 115.3)
 
     _rect(c, 388.4, 633.5, 546.8, 764.3, stroke=GRID)
-    _draw_image(c, stamp_path, 409.9, 643.9, 110, 83, preserve=False)
+    _draw_image(c, stamp_path, 409.9, 643.9, 100, 83, preserve=False)
     _text(c, "Authorized Signatory", 471.5, 729.0, size=9.8, bold=True, align="center")
     _text(c, f"For {agency.name or ''}", 471.5, 742.4, size=9.8, bold=True, align="center")
 
