@@ -399,7 +399,7 @@ def generate_invoice_pdf(invoice, agency, customer, passengers, output_path=None
     _draw_image(c, _qr_image(agency.upi_id, invoice.total_amount or 0), 226.7, 641.3, 172, 115.3)
 
     _rect(c, 388.4, 633.5, 546.8, 764.3, stroke=GRID)
-    _draw_image(c, stamp_path, 409.9, 643.9, 100, 83, preserve=False)
+    _draw_image(c, stamp_path, 409.9, 643.9, 116, 90, preserve=False)
     _text(c, "Authorized Signatory", 471.5, 729.0, size=9.8, bold=True, align="center")
     _text(c, f"For {agency.name or ''}", 471.5, 742.4, size=9.8, bold=True, align="center")
 
