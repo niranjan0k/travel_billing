@@ -20,6 +20,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # PostgreSQL connection. Configure via DATABASE_URL env var.
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
+DEBUG_MODE = os.environ.get("DEBUG_MODE", False)
 if not DATABASE_URL:
     raise RuntimeError(
         "DATABASE_URL environment variable is not set. "
@@ -576,4 +577,4 @@ def reports_customers():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=DEBUG_MODE)

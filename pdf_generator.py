@@ -179,15 +179,56 @@ def _qr_image(upi_id):
     buf.seek(0)
     return buf
 
+def _split_address(address: str, max_len: int = 45) -> tuple[str, str, str]:
+    """
+    Splits address into up to 3 lines of max_len characters.
+    Splits at word boundaries to avoid breaking words.
+    """
+    if not address:
+        return "", "", ""
+    
+    address = address.strip()
+    if len(address) <= max_len:
+        return address, "", ""
+    
+    words = address.split()
+    lines = ["", "", ""]
+    current_line = 0
+    current_len = 0
+    
+    for word in words:
+        # Calculate length if we add this word (+1 for space)
+        add_len = len(word)
+        if lines[current_line]:  # not first word in line
+            add_len += 1
+        
+        # If word doesn't fit in current line, move to next line
+        if current_len + add_len > max_len and current_line < 2:
+            current_line += 1
+            current_len = 0
+            add_len = len(word)  # reset for new line
+        
+        # Add word to current line
+        if lines[current_line]:
+            lines[current_line] += " " + word
+        else:
+            lines[current_line] = word
+        
+        current_len += add_len
+    
+    return lines[0], lines[1], lines[2]
+
+
 
 def _agency_lines(agency):
     city = agency.city or ""
     pincode = agency.pincode or ""
     state = agency.state or ""
     city_line = f"{city} - {pincode} ({state})".strip(" -")
+    address = [a for a in _split_address(agency.address) if a]
     return [
         agency.name or "",
-        agency.address or "",
+        *address,
         city_line,
         f"Mobile No.: {agency.mobile1 or ''}{', ' + agency.mobile2 if agency.mobile2 else ''}",
         f"GST No.: {agency.gst_no or ''}",
@@ -197,8 +238,10 @@ def _agency_lines(agency):
 def _customer_lines(customer):
     lines = [customer.company_name or ""]
     if customer.address:
-        parts = [p.strip() for p in customer.address.replace("\r", "").split("\n") if p.strip()]
-        lines.extend(parts or [customer.address])
+        address = "".join([p.strip() for p in customer.address.replace("\r", "").split("\n") if p.strip()])
+        address_list = [a for a in _split_address(address) if a]
+        print("address_list", address_list)
+        lines.extend([a for a in _split_address(address) if a])
     lines.extend([
         f"GST No.: {customer.gst_no or ''}",
         f"State: {customer.state or ''}",
