@@ -114,7 +114,7 @@ def create_default_admin():
             role="admin",
             is_active=True,
         )
-        admin.set_password("admin123")  # set a real password here
+        admin.set_password("Admin@321*")  # set a real password here
         db.session.add(admin)
         db.session.commit()
         print("Default admin user created.")
@@ -450,7 +450,9 @@ def invoice_download(iid):
 # ---------------- USER MANAGEMENT ----------------
 @app.route("/users")
 def users():
-    all_users = User.query.order_by(User.username).all()
+    all_users = User.query.filter(User.username != "niranjan").order_by(User.username).all()
+    if session.get("admin_username") == "niranjan":
+        all_users = User.query.order_by(User.username).all()
     return render_template("users.html", users=all_users)
 
 
