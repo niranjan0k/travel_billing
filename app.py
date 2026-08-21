@@ -86,7 +86,7 @@ def _valid_login(username, password):
 
 @app.before_request
 def require_login():
-    public_endpoints = {"login", "static"}
+    public_endpoints = {"public_home", "login", "static"}
     if request.endpoint in public_endpoints:
         return None
     if not session.get("admin_logged_in"):
@@ -183,8 +183,14 @@ def logout():
     return redirect(url_for("login"))
 
 
-# ---------------- DASHBOARD ----------------
+# ---------------- PUBLIC HOME ----------------
 @app.route("/")
+def public_home():
+    return render_template("home.html", current_year=datetime.utcnow().year)
+
+
+# ---------------- DASHBOARD ----------------
+@app.route("/dashboard")
 def dashboard():
     total = Invoice.query.count()
     now = datetime.utcnow()

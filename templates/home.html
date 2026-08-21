@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SONA Travel Agency | Your Journey, Our Expertise</title>
+  <meta name="description" content="Discover amazing travel destinations with SONA Travel Agency.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+</head>
+<body class="home-page">
+  <header class="public-header">
+    <div class="home-container nav-inner">
+      <a class="public-brand" href="{{ url_for('public_home') }}" aria-label="SONA Travel Agency home">
+        <strong>SONA</strong><span>TRAVEL AGENCY</span>
+      </a>
+      <nav class="public-nav" id="publicNav" aria-label="Main navigation">
+        <a class="active" href="#home">Home</a>
+        <a href="#packages">Tours</a>
+        <a href="#services">Flights</a>
+        <a href="#services">Trains</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <div class="header-actions">
+        <a class="phone-link" href="tel:+917845123456"><i class="bi bi-telephone"></i><span>+91 7845-123456</span></a>
+        <a class="login-button" href="{{ url_for('login') }}">Login</a>
+      </div>
+      <button class="mobile-nav-toggle" type="button" aria-label="Open menu" aria-controls="publicNav" aria-expanded="false">
+        <i class="bi bi-list"></i>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="hero-overlay"></div>
+      <div class="home-container hero-content">
+        <div class="hero-copy">
+          <h1>Explore Incredible India with <span>SONA Travel</span></h1>
+          <p>From the majestic Himalayas to serene backwaters of Kerala, discover the treasures of India with our exclusive tour packages, flight bookings, and train tickets - all in one place.</p>
+          <div class="hero-buttons">
+            <a class="primary-button" href="#packages">Explore Packages</a>
+            <a class="secondary-button" href="#contact">Contact Us</a>
+          </div>
+        </div>
+      </div>
+      <div class="home-container search-card-wrap">
+        <form class="travel-search" action="#packages" method="get">
+          <label class="search-field">
+            <span><i class="bi bi-geo-alt"></i>Where to?</span>
+            <input type="text" name="destination" placeholder="Goa, Jaipur, Shimla...">
+          </label>
+          <label class="search-field">
+            <span><i class="bi bi-calendar3"></i>When?</span>
+            <input type="text" name="travel_date" placeholder="Travel Date" onfocus="this.type='date'" onblur="if(!this.value)this.type='text'">
+          </label>
+          <button class="search-button" type="submit"><i class="bi bi-search"></i>Search</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="packages-section pattern-section" id="packages">
+      <div class="home-container">
+        <div class="section-heading">
+          <h2>Featured Tour Packages</h2>
+          <p>Discover our handpicked selection of extraordinary destinations and exclusive travel packages</p>
+        </div>
+        <div class="package-grid">
+          <article class="package-card">
+            <img src="https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=900&q=80" alt="Tropical Kerala backwaters">
+            <div class="package-body">
+              <span class="package-tag">Nature &amp; Culture</span>
+              <h3>Kerala Backwaters</h3>
+              <p>Relax among palm-lined waterways, local flavours, and peaceful coastal towns.</p>
+              <a href="#contact">Plan this journey <i class="bi bi-arrow-right"></i></a>
+            </div>
+          </article>
+          <article class="package-card">
+            <img src="https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=900&q=80" alt="Jaipur palace and architecture">
+            <div class="package-body">
+              <span class="package-tag">Heritage Escape</span>
+              <h3>Royal Rajasthan</h3>
+              <p>Experience colourful markets, grand forts, and the timeless charm of Jaipur.</p>
+              <a href="#contact">Plan this journey <i class="bi bi-arrow-right"></i></a>
+            </div>
+          </article>
+          <article class="package-card">
+            <img src="https://images.unsplash.com/photo-1598091383021-15ddea10925d?auto=format&fit=crop&w=900&q=80" alt="Snowy Himalayan mountain landscape">
+            <div class="package-body">
+              <span class="package-tag">Mountain Adventure</span>
+              <h3>Himalayan Escape</h3>
+              <p>Trade the everyday for crisp mountain air, scenic trails, and unforgettable views.</p>
+              <a href="#contact">Plan this journey <i class="bi bi-arrow-right"></i></a>
+            </div>
+          </article>
+        </div>
+        <div class="center-action"><a class="outline-button" href="#contact">View All Packages <i class="bi bi-arrow-right"></i></a></div>
+      </div>
+    </section>
+
+    <section class="services-section" id="services">
+      <div class="home-container">
+        <div class="section-heading">
+          <h2>Everything You Need to Travel</h2>
+          <p>One trusted team for every part of your journey.</p>
+        </div>
+        <div class="service-grid">
+          <div class="service-item"><i class="bi bi-map"></i><h3>Tour Packages</h3><p>Thoughtfully planned experiences for every kind of traveller.</p></div>
+          <div class="service-item"><i class="bi bi-airplane"></i><h3>Flight Bookings</h3><p>Convenient flight options and helpful booking support.</p></div>
+          <div class="service-item"><i class="bi bi-train-front"></i><h3>Train Tickets</h3><p>Reliable rail booking for easy journeys across India.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section" id="about">
+      <div class="home-container about-content">
+        <div>
+          <span class="eyebrow">About SONA Travel</span>
+          <h2>Your journey is our expertise.</h2>
+        </div>
+        <p>We combine local knowledge, personal service, and simple technology to make every trip comfortable from the first plan to the final destination.</p>
+      </div>
+    </section>
+
+    <section class="contact-section" id="contact">
+      <div class="home-container contact-card">
+        <div>
+          <span class="eyebrow">Start planning</span>
+          <h2>Ready for your next adventure?</h2>
+          <p>Tell us where you want to go and we will take care of the details.</p>
+        </div>
+        <a class="primary-button" href="tel:+917845123456"><i class="bi bi-telephone me-2"></i>Talk to an expert</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="public-footer">
+    <div class="home-container footer-inner">
+      <a class="public-brand" href="#home"><strong>SONA</strong><span>TRAVEL AGENCY</span></a>
+      <span>© {{ current_year }} SONA Travel Agency. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script>
+    const menuButton = document.querySelector('.mobile-nav-toggle');
+    const nav = document.querySelector('.public-nav');
+    menuButton.addEventListener('click', () => {
+      const open = nav.classList.toggle('is-open');
+      menuButton.setAttribute('aria-expanded', open);
+    });
+    nav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => nav.classList.remove('is-open')));
+  </script>
+</body>
+</html>
