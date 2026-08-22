@@ -20,7 +20,7 @@
         {% endfor %}
       {% endwith %}
 
-      <form method="post" action="{{ url_for('login') }}" class="login-form">
+      <form method="post" action="{{ url_for('login') }}" class="login-form" autocomplete="off">
         <input type="hidden" name="next" value="{{ next_url }}">
         <div class="mb-3">
           <label class="form-label" for="username">Username</label>
