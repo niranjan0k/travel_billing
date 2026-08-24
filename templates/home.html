@@ -150,11 +150,11 @@
           </div>
           <div class="form-row">
             <label><span>Name <b>*</b></span><input type="text" name="name" required maxlength="120" placeholder="Your name"></label>
-            <label><span>Email <b>*</b></span><input type="email" name="email" required maxlength="160" placeholder="you@example.com"></label>
+            <label><span>Email <b>*</b></span><input type="email" name="email" required maxlength="160" placeholder="you@example.com" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"></label>
           </div>
           <div class="form-row">
-            <label><span>Phone</span><input type="tel" name="phone" maxlength="30" placeholder="+91"></label>
-            <label><span>Subject</span><input type="text" name="subject" maxlength="200" placeholder="How can we help?"></label>
+            <label><span>Mobile No <b>*</b></span><input type="tel" required onkeypress="return isNumberKey(event);" onblur="return isValidMobileNo(this)" name="phone" maxlength="10" minlength="10" placeholder=""></label>
+            <label><span>Subject <b>*</b></span><input type="text" required name="subject" maxlength="200" placeholder="How can we help?"></label>
           </div>
           <label><span>Message <b>*</b></span><textarea name="message" required maxlength="4000" rows="4" placeholder="Tell us about your travel plans..."></textarea></label>
           <button class="primary-button contact-submit" type="submit"><i class="bi bi-send me-2"></i>Send Enquiry</button>
@@ -171,6 +171,31 @@
   </footer>
 
   <script>
+
+    function isNumberKey(evt){  //<!--Function to accept only numeric values-->
+      //var e = evt || window.event;
+      var charCode = (evt.which) ? evt.which : evt.keyCode
+      if (charCode != 46 && charCode > 31 && (charCode < 48 || charCode > 57))
+            return false;
+      return true;
+   }
+   function isValidMobileNo(event){
+      var val = event.value;
+      var mobileNum_regex = /^[6-9][0-9]{9}$/;
+      var repeatMoreThan5Times_regex = /(\d)\1{5}/;
+      if (mobileNum_regex.test(val) && !repeatMoreThan5Times_regex.test(val)){
+            return true;
+      }
+      else{
+            if (event.value.length > 0)
+              alert('Invalid Mobile No');
+            event.value = "";
+            // event.focus();
+            // window.setTimeout(() => event.focus(), 0);
+            return false;
+      }
+   }
+
     const menuButton = document.querySelector('.mobile-nav-toggle');
     const nav = document.querySelector('.public-nav');
     menuButton.addEventListener('click', () => {
