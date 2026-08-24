@@ -1,5 +1,7 @@
 import os
+import smtplib
 from datetime import datetime, date
+from email.message import EmailMessage
 from flask import (
     Flask, render_template, request, redirect, url_for, flash,
     abort, Response, session,
@@ -8,7 +10,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
 from sqlalchemy import or_
 
-from models import db, Agency, Customer, Invoice, Passenger, User
+from models import db, Agency, Customer, Invoice, Passenger, User, ContactInquiry
 from utils import next_invoice_number, compute_totals
 from pdf_generator import generate_invoice_pdf, BASE_DIR
 from dotenv import load_dotenv
@@ -187,6 +189,71 @@ def logout():
 @app.route("/")
 def public_home():
     return render_template("home.html", current_year=datetime.utcnow().year)
+
+
+def _send_contact_notification(inquiry):
+    """Send an SMTP notification when mail settings are configured."""
+    admin_email = os.environ.get("ADMIN_EMAIL", "rch.sonatravelagency@gmail.com").strip()
+    host = os.environ.get("SMTP_HOST", "smtp.gmail.com").strip()
+    username = os.environ.get("SMTP_USERNAME", admin_email).strip()
+    password = os.environ.get("SMTP_PASSWORD", "")
+    if not host or not username or not password:
+        return False, "Email delivery is not configured yet."
+
+    sender = os.environ.get("MAIL_FROM", username).strip()
+    msg = EmailMessage()
+    msg["Subject"] = f"New website enquiry: {inquiry.subject or 'Travel enquiry'}"
+    msg["From"] = sender
+    msg["To"] = admin_email
+    msg["Reply-To"] = inquiry.email
+    msg.set_content(
+        f"New contact enquiry received from the SONA Travel Agency website.\n\n"
+        f"Name: {inquiry.name}\nEmail: {inquiry.email}\n"
+        f"Phone: {inquiry.phone or 'Not provided'}\n"
+        f"Subject: {inquiry.subject or 'Not provided'}\n\n"
+        f"Message:\n{inquiry.message}\n\n"
+        f"Received: {inquiry.created_at.strftime('%d-%m-%Y %H:%M UTC')}"
+    )
+
+    port = int(os.environ.get("SMTP_PORT", "587"))
+    try:
+        with smtplib.SMTP(host, port, timeout=15) as smtp:
+            if os.environ.get("SMTP_USE_TLS", "true").lower() != "false":
+                smtp.starttls()
+            smtp.login(username, password)
+            smtp.send_message(msg)
+        return True, "Email notification sent."
+    except (OSError, smtplib.SMTPException, ValueError):
+        app.logger.exception("Unable to send contact inquiry notification")
+        return False, "The enquiry was saved, but the email notification could not be sent."
+
+
+@app.route("/contact/submit", methods=["POST"])
+def submit_contact():
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip()
+    phone = request.form.get("phone", "").strip()
+    subject = request.form.get("subject", "").strip()
+    message = request.form.get("message", "").strip()
+
+    if not name or not email or not message:
+        flash("Please provide your name, email, and message.", "danger")
+        return redirect(url_for("public_home", _anchor="contact"))
+
+    inquiry = ContactInquiry(
+        name=name, email=email, phone=phone, subject=subject, message=message
+    )
+    db.session.add(inquiry)
+    db.session.commit()
+    sent, mail_status = _send_contact_notification(inquiry)
+    if sent:
+        inquiry.email_sent = True
+        db.session.commit()
+        flash("Thank you. Your enquiry has been sent to SONA Travel Agency.", "success")
+    else:
+        flash(f"Your enquiry was saved successfully. {mail_status}", "warning")
+    return redirect(url_for("public_home", _anchor="contact"))
+
 
 
 # ---------------- DASHBOARD ----------------
@@ -518,6 +585,20 @@ def delete_user(uid):
     flash("User deleted.", "success")
     return redirect(url_for("users"))
 
+
+@app.route("/contact-inquiries")
+def contact_inquiries():
+    enquiries = ContactInquiry.query.order_by(ContactInquiry.created_at.desc()).all()
+    unread = ContactInquiry.query.filter_by(is_read=False).count()
+    return render_template("contact_inquiries.html", enquiries=enquiries, unread=unread)
+
+
+@app.route("/contact-inquiries/<int:iid>/read", methods=["POST"])
+def mark_inquiry_read(iid):
+    inquiry = ContactInquiry.query.get_or_404(iid)
+    inquiry.is_read = True
+    db.session.commit()
+    return redirect(url_for("contact_inquiries"))
 
 # ---------------- REPORTS ----------------
 @app.route("/reports")

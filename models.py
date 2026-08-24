@@ -99,3 +99,16 @@ class User(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+class ContactInquiry(db.Model):
+    """Public enquiries submitted through the agency homepage."""
+    __tablename__ = "contact_inquiries"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(160), nullable=False)
+    phone = db.Column(db.String(30))
+    subject = db.Column(db.String(200))
+    message = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False, nullable=False)
+    email_sent = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)

@@ -37,29 +37,26 @@
 
   <main>
     <section class="hero" id="home">
+      <div class="hero-slides" aria-label="SONA Travel highlights">
+        <div class="hero-slide is-active" style="background-image:url('{{ url_for('static', filename='img/presentation/sona-travel-poster.jpeg') }}')"></div>
+        <div class="hero-slide" style="background-image:url('{{ url_for('static', filename='img/presentation/destinations.jpeg') }}')"></div>
+        <div class="hero-slide" style="background-image:url('{{ url_for('static', filename='img/presentation/thailand-arrival.jpeg') }}')"></div>
+      </div>
       <div class="hero-overlay"></div>
       <div class="home-container hero-content">
         <div class="hero-copy">
-          <h1>Explore Incredible India with <span>SONA Travel</span></h1>
-          <p>From the majestic Himalayas to serene backwaters of Kerala, discover the treasures of India with our exclusive tour packages, flight bookings, and train tickets - all in one place.</p>
+          <h1>We Never Stop Working For You <span>SONA Travel</span></h1>
+          <p>From railway e-tickets and air bookings to complete holiday experiences, SONA Travel Agency makes every journey easier with personal support from planning to arrival.</p>
           <div class="hero-buttons">
             <a class="primary-button" href="#packages">Explore Packages</a>
             <a class="secondary-button" href="#contact">Contact Us</a>
           </div>
         </div>
       </div>
-      <div class="home-container search-card-wrap">
-        <form class="travel-search" action="#packages" method="get">
-          <label class="search-field">
-            <span><i class="bi bi-geo-alt"></i>Where to?</span>
-            <input type="text" name="destination" placeholder="Goa, Jaipur, Shimla...">
-          </label>
-          <label class="search-field">
-            <span><i class="bi bi-calendar3"></i>When?</span>
-            <input type="text" name="travel_date" placeholder="Travel Date" onfocus="this.type='date'" onblur="if(!this.value)this.type='text'">
-          </label>
-          <button class="search-button" type="submit"><i class="bi bi-search"></i>Search</button>
-        </form>
+      <div class="hero-dots" aria-label="Carousel controls">
+        <button class="hero-dot is-active" type="button" aria-label="Show slide 1"></button>
+        <button class="hero-dot" type="button" aria-label="Show slide 2"></button>
+        <button class="hero-dot" type="button" aria-label="Show slide 3"></button>
       </div>
     </section>
 
@@ -105,13 +102,17 @@
     <section class="services-section" id="services">
       <div class="home-container">
         <div class="section-heading">
-          <h2>Everything You Need to Travel</h2>
-          <p>One trusted team for every part of your journey.</p>
+          <h2>Complete Travel Services, All in One Place</h2>
+          <p>From a single ticket to a fully planned international trip, our team handles the details with care.</p>
         </div>
         <div class="service-grid">
-          <div class="service-item"><i class="bi bi-map"></i><h3>Tour Packages</h3><p>Thoughtfully planned experiences for every kind of traveller.</p></div>
-          <div class="service-item"><i class="bi bi-airplane"></i><h3>Flight Bookings</h3><p>Convenient flight options and helpful booking support.</p></div>
-          <div class="service-item"><i class="bi bi-train-front"></i><h3>Train Tickets</h3><p>Reliable rail booking for easy journeys across India.</p></div>
+          <div class="service-item"><i class="bi bi-train-front"></i><h3>Railway E-Tickets</h3><p>Bulk and individual railway e-ticket booking with dependable coordination.</p></div>
+          <div class="service-item"><i class="bi bi-airplane"></i><h3>Air Tickets</h3><p>Domestic and international flight bookings for business and leisure travel.</p></div>
+          <div class="service-item"><i class="bi bi-map"></i><h3>Holiday Packages</h3><p>Domestic and international itineraries shaped around your time and interests.</p></div>
+          <div class="service-item"><i class="bi bi-passport"></i><h3>Passport &amp; Visa</h3><p>Guidance and assistance for passport applications and visa documentation.</p></div>
+          <div class="service-item"><i class="bi bi-building"></i><h3>Hotels</h3><p>Comfortable stays selected to match your destination, budget, and plans.</p></div>
+          <div class="service-item"><i class="bi bi-currency-exchange"></i><h3>Forex</h3><p>Practical foreign exchange support to help you travel with confidence.</p></div>
+          <div class="service-item"><i class="bi bi-water"></i><h3>Cruises</h3><p>Memorable cruise experiences with support from booking through boarding.</p></div>
         </div>
       </div>
     </section>
@@ -121,19 +122,43 @@
         <div>
           <span class="eyebrow">About SONA Travel</span>
           <h2>Your journey is our expertise.</h2>
+          <p class="about-highlight">Trusted travel support since 1996</p>
         </div>
-        <p>We combine local knowledge, personal service, and simple technology to make every trip comfortable from the first plan to the final destination.</p>
+        <div class="about-copy">
+          <p>SONA Travel Agency is a travel partner built on responsive service, practical advice, and a commitment to keep working for every traveller. From our base in Ranchi, Jharkhand, we help individuals, families, groups, and corporate teams arrange travel across India and around the world.</p>
+          <p>Our experience covers railway and flight bookings, holiday planning, hotel reservations, passports, visas, forex, and cruises. We also support corporate and group travel requirements with careful coordination, clear communication, and assistance when plans change.</p>
+          <p>Whether you are planning a weekend away, an international holiday, or a large group movement, our team is available to make the journey comfortable from the first conversation to the final destination.</p>
+        </div>
       </div>
     </section>
 
     <section class="contact-section" id="contact">
-      <div class="home-container contact-card">
-        <div>
+      <div class="home-container contact-layout">
+        <div class="contact-intro">
           <span class="eyebrow">Start planning</span>
           <h2>Ready for your next adventure?</h2>
-          <p>Tell us where you want to go and we will take care of the details.</p>
+          <p>Tell us where you want to go and our travel experts will take care of the details.</p>
+          <div class="contact-direct">
+            <a href="tel:+917845123456"><i class="bi bi-telephone"></i> +91 7845-123456</a>
+            <a href="mailto:rch.sonatravelagency@gmail.com"><i class="bi bi-envelope"></i> rch.sonatravelagency@gmail.com</a>
+          </div>
         </div>
-        <a class="primary-button" href="tel:+917845123456"><i class="bi bi-telephone me-2"></i>Talk to an expert</a>
+        <form class="contact-form" method="post" action="{{ url_for('submit_contact') }}">
+          <div class="contact-form-heading">
+            <h3>Send us a message</h3>
+            <span>We’ll get back to you soon.</span>
+          </div>
+          <div class="form-row">
+            <label><span>Name <b>*</b></span><input type="text" name="name" required maxlength="120" placeholder="Your name"></label>
+            <label><span>Email <b>*</b></span><input type="email" name="email" required maxlength="160" placeholder="you@example.com"></label>
+          </div>
+          <div class="form-row">
+            <label><span>Phone</span><input type="tel" name="phone" maxlength="30" placeholder="+91"></label>
+            <label><span>Subject</span><input type="text" name="subject" maxlength="200" placeholder="How can we help?"></label>
+          </div>
+          <label><span>Message <b>*</b></span><textarea name="message" required maxlength="4000" rows="4" placeholder="Tell us about your travel plans..."></textarea></label>
+          <button class="primary-button contact-submit" type="submit"><i class="bi bi-send me-2"></i>Send Enquiry</button>
+        </form>
       </div>
     </section>
   </main>
@@ -153,6 +178,20 @@
       menuButton.setAttribute('aria-expanded', open);
     });
     nav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => nav.classList.remove('is-open')));
+
+    const slides = document.querySelectorAll('.hero-slide');
+    const dots = document.querySelectorAll('.hero-dot');
+    let activeSlide = 0;
+    function showSlide(index) {
+      activeSlide = (index + slides.length) % slides.length;
+      slides.forEach((slide, i) => slide.classList.toggle('is-active', i === activeSlide));
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('is-active', i === activeSlide);
+        dot.setAttribute('aria-current', i === activeSlide ? 'true' : 'false');
+      });
+    }
+    dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
+    setInterval(() => showSlide(activeSlide + 1), 5000);
   </script>
 </body>
 </html>
