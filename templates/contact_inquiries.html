@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Contact Enquiries{% endblock %}
+
+{% block card_header_left %}
+<i class="bi bi-envelope-paper me-2 text-accent"></i>Contact Enquiries 
+<span class="badge bg-secondary ms-2">{{ enquiries|length }}</span>
+{% endblock %}
+
+
+{% block content %}
+  {% if unread %}<span class="badge bg-primary">{{ unread }} unread</span>{% endif %}
+
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Received</th>
+          <th>Contact</th>
+          <th>Subject</th>
+          <th>Message</th>
+          <th>Email</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for enquiry in enquiries %}
+        <tr class="{% if not enquiry.is_read %}table-primary{% endif %}">
+          <td>
+            {% if enquiry.is_read %}
+              <span class="badge bg-light text-secondary">Read</span>
+            {% else %}
+              <span class="badge bg-primary">New</span>
+            {% endif %}
+          </td>
+          <td class="text-muted small">{{ enquiry.created_at.strftime('%d-%m-%Y %H:%M') }}</td>
+          <td>
+            <strong>{{ enquiry.name }}</strong><br>
+            <a class="small" href="mailto:{{ enquiry.email }}">{{ enquiry.email }}</a>
+            {% if enquiry.phone %}<br><span class="small text-muted">{{ enquiry.phone }}</span>{% endif %}
+          </td>
+          <td>{{ enquiry.subject or '—' }}</td>
+          <td class="small" style="min-width:240px; white-space:pre-wrap;">{{ enquiry.message }}</td>
+          <td>
+            {% if enquiry.email_sent %}
+              <span class="badge badge-active"><i class="bi bi-check2"></i> Sent</span>
+            {% else %}
+              <span class="badge badge-inactive">Not sent</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if not enquiry.is_read %}
+              <form method="post" action="{{ url_for('mark_inquiry_read', iid=enquiry.id) }}">
+                <button class="btn btn-sm btn-outline-secondary" title="Mark as read"><i class="bi bi-check2"></i></button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-5">No contact enquiries yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
