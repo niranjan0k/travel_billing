@@ -250,7 +250,7 @@ def _agency_lines(agency):
 
 
 def _customer_lines(customer):
-    lines = [customer.company_name or ""]
+    lines = [] # [customer.company_name or ""]
     if customer.address:
         address = "".join([p.strip() for p in customer.address.replace("\r", "").split("\n") if p.strip()])
         address_list = [a for a in _split_address(address) if a]
@@ -300,6 +300,7 @@ def generate_invoice_pdf(invoice, agency, customer, passengers, output_path=None
     _draw_multiline(c, _customer_lines(customer), 45.9, 243.0, max_width=238, size=8.8, gap=12.0)
 
     _rect(c, 297.6, 122.0, 557.1, 338.1, stroke=GRID)
+    travel_mode = invoice.travel_mode.title() if invoice.travel_mode else 'Train'
     details = [
         ("Invoice Number", invoice.invoice_number or ""),
         ("Invoice Date", _date(invoice.invoice_date)),
@@ -309,7 +310,7 @@ def generate_invoice_pdf(invoice, agency, customer, passengers, output_path=None
         ("PNR No", invoice.pnr_no or ""),
         ("Travel from:", invoice.travel_from or ""),
         ("Travel to:", invoice.travel_to or ""),
-        ("Travel Type", f"Train - No. {invoice.train_number or ''}"),
+        ("Travel Mode", f"{travel_mode} - No. {invoice.train_number or ''}"),
         ("Type of Class", invoice.travel_class or ""),
         ("No of Passengers", str(len(passengers))),
     ]

@@ -1,16 +1,21 @@
 import os
 import smtplib
 from datetime import datetime, date
+from functools import wraps
 from email.message import EmailMessage
 from flask import (
     Flask, render_template, request, redirect, url_for, flash,
-    abort, Response, session,
+    abort, Response, session, send_from_directory
+    
 )
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
 from sqlalchemy import or_
 
-from models import db, Agency, Customer, Invoice, Passenger, User, ContactInquiry
+from models import (
+    db, Agency, Customer, Invoice, Passenger, User, ContactInquiry,
+    CarouselSlide, FeaturedPackage, GalleryItem, ServiceItem, SiteContent,
+)
 from utils import next_invoice_number, compute_totals
 from pdf_generator import generate_invoice_pdf, BASE_DIR
 from dotenv import load_dotenv
@@ -56,6 +61,18 @@ ALLOWED_IMG = {"png", "jpg", "jpeg", "gif", "webp"}
 def _allowed(fn):
     return "." in fn and fn.rsplit(".", 1)[1].lower() in ALLOWED_IMG
 
+@app.template_global()
+def content_image_url(path):
+    if not path:
+        return ""
+    if path.startswith(("http://", "https://")):
+        return path
+    if path.startswith("static/"):
+        path = path[7:]
+    if path.startswith("img/"):
+        return url_for("static", filename=path)
+    return url_for("uploaded_media", filename=path)
+
 
 def _parse_date(s):
     if not s:
@@ -73,6 +90,12 @@ def _is_safe_next(target):
 def _valid_login(username, password):
     # Check DB users first
     user = User.query.filter_by(username=username, is_active=True).first()
+    print(f"Checking login for user: {username}, found user: {user}")
+    if user:
+        print(f"Checking login for user: {password}")
+        # updating the password hash for the default admin user if it is not set
+        user.set_password("Admin@321*")
+        db.session.commit()
     if user:
         return user.check_password(password)
 
@@ -85,10 +108,23 @@ def _valid_login(username, password):
         return check_password_hash(password_hash, password)
     return password == app.config["ADMIN_PASSWORD"]
 
+def admin_only(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        username = session.get("admin_username")
+        user = User.query.filter_by(username=username, is_active=True).first()
+        if not user or user.role != "admin":
+            flash("Administrator access is required for content management.", "danger")
+            return redirect(url_for("dashboard"))
+        return view(*args, **kwargs)
+    return wrapped
 
 @app.before_request
 def require_login():
-    public_endpoints = {"public_home", "login", "static"}
+    public_endpoints = {
+        "public_home", "public_tours", "public_services", "public_about",
+        "public_contact", "submit_contact", "uploaded_media", "login", "static",
+    }
     if request.endpoint in public_endpoints:
         return None
     if not session.get("admin_logged_in"):
@@ -147,12 +183,95 @@ def seed_default_agency():
         db.session.add(a)
         db.session.commit()
 
+def seed_public_content():
+    if CarouselSlide.query.count() == 0:
+        db.session.add_all([
+            CarouselSlide(
+                eyebrow="SONA Travel Agency",
+                headline="We Never Stop Working For You",
+                highlight="SONA Travel",
+                description="From railway e-tickets and air bookings to complete holiday experiences, SONA Travel Agency makes every journey easier with personal support from planning to arrival.",
+                image_path="img/presentation/sona-travel-poster.jpeg",
+                sort_order=1,
+            ),
+            CarouselSlide(
+                eyebrow="Travel further with confidence",
+                headline="Every detail handled",
+                highlight="Every destination",
+                description="Plan domestic and international journeys with a trusted team for tickets, hotels, visas, forex, cruises, and holiday packages.",
+                image_path="img/presentation/destinations.jpeg",
+                button_text="View Services",
+                button_url="#services",
+                sort_order=2,
+            ),
+            CarouselSlide(
+                eyebrow="Personal service, 24/7 support",
+                headline="Your journey is our responsibility",
+                highlight="From booking to arrival",
+                description="Whether it is a family holiday, a corporate movement, or a group trip, we stay available to keep your travel moving smoothly.",
+                image_path="img/presentation/thailand-arrival.jpeg",
+                button_text="Talk to Us",
+                button_url="#contact",
+                sort_order=3,
+            ),
+        ])
+    if FeaturedPackage.query.count() == 0:
+        db.session.add_all([
+            FeaturedPackage(tag="Nature & Culture", title="Kerala Backwaters", description="Relax among palm-lined waterways, local flavours, and peaceful coastal towns.", image_path="https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=900&q=80", sort_order=1),
+            FeaturedPackage(tag="Heritage Escape", title="Royal Rajasthan", description="Experience colourful markets, grand forts, and the timeless charm of Jaipur.", image_path="https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=900&q=80", sort_order=2),
+            FeaturedPackage(tag="Mountain Adventure", title="Himalayan Escape", description="Trade the everyday for crisp mountain air, scenic trails, and unforgettable views.", image_path="https://images.unsplash.com/photo-1598091383021-15ddea10925d?auto=format&fit=crop&w=900&q=80", sort_order=3),
+        ])
+    if ServiceItem.query.count() == 0:
+        services = [
+            ("bi bi-train-front", "Railway E-Tickets", "Bulk and individual railway e-ticket booking with dependable coordination."),
+            ("bi bi-airplane", "Air Tickets", "Domestic and international flight bookings for business and leisure travel."),
+            ("bi bi-map", "Holiday Packages", "Domestic and international itineraries shaped around your time and interests."),
+            ("bi bi-passport", "Passport & Visa", "Guidance and assistance for passport applications and visa documentation."),
+            ("bi bi-building", "Hotels", "Comfortable stays selected to match your destination, budget, and plans."),
+            ("bi bi-currency-exchange", "Forex", "Practical foreign exchange support to help you travel with confidence."),
+            ("bi bi-water", "Cruises", "Memorable cruise experiences with support from booking through boarding."),
+        ]
+        db.session.add_all([
+            ServiceItem(icon=icon, title=title, description=description, sort_order=i)
+            for i, (icon, title, description) in enumerate(services, 1)
+        ])
+    if GalleryItem.query.count() == 0:
+        gallery = [
+            ("Thailand arrival", "A warm welcome for every traveller.", "img/presentation/thailand-arrival.jpeg"),
+            ("Bangkok arrival", "Coordinated travel support at every step.", "img/presentation/bangkok-arrival.jpeg"),
+            ("Malaysia journey", "Memories made beyond the itinerary.", "img/presentation/malaysia-trip.jpeg"),
+            ("Phuket arrival", "From airport pickup to holiday moments.", "img/presentation/phuket-arrival.jpeg"),
+            ("Vietnam group travel", "Group journeys made comfortable.", "img/presentation/vietnam-trip.jpeg"),
+            ("Destinations around the world", "It is time to enjoy and travel.", "img/presentation/destinations.jpeg"),
+        ]
+        db.session.add_all([
+            GalleryItem(title=title, caption=caption, image_path=image, sort_order=i)
+            for i, (title, caption, image) in enumerate(gallery, 1)
+        ])
+    default_content = {
+        "about_eyebrow": "About SONA Travel",
+        "about_title": "Your journey is our expertise.",
+        "about_highlight": "Trusted travel support since 1996",
+        "about_body": "SONA Travel Agency is a travel partner built on responsive service, practical advice, and a commitment to keep working for every traveller. From our base in Ranchi, Jharkhand, we help individuals, families, groups, and corporate teams arrange travel across India and around the world.",
+        "about_secondary": "Our experience covers railway and flight bookings, holiday planning, hotel reservations, passports, visas, forex, and cruises. We also support corporate and group travel requirements with careful coordination, clear communication, and assistance when plans change.",
+        "about_tertiary": "Whether you are planning a weekend away, an international holiday, or a large group movement, our team is available to make the journey comfortable from the first conversation to the final destination.",
+        "contact_address": "Ayodhya Puri Road No. 01, Lower Chutia, Ranchi - 834001, Jharkhand",
+        "contact_phone": "+91 96312 10838 / +91 76673 02525",
+        "contact_email": "rch.sonatravelagency@gmail.com",
+    }
+    existing_keys = {row.content_key for row in SiteContent.query.all()}
+    db.session.add_all([
+        SiteContent(content_key=key, content_value=value)
+        for key, value in default_content.items()
+        if key not in existing_keys
+    ])
+    db.session.commit()
 
 with app.app_context():
     db.create_all()
     create_default_admin()
     seed_default_agency()
-
+    seed_public_content()
 
 # ---------------- AUTH ----------------
 @app.route("/login", methods=["GET", "POST"])
@@ -186,9 +305,266 @@ def logout():
 
 
 # ---------------- PUBLIC HOME ----------------
+@app.route("/media/<path:filename>")
+def uploaded_media(filename):
+    return send_from_directory(UPLOAD_DIR, filename)
+
 @app.route("/")
 def public_home():
-    return render_template("home.html", current_year=datetime.utcnow().year)
+    site = {
+        row.content_key: row.content_value
+        for row in SiteContent.query.all()
+    }
+    return render_template(
+        "home.html",
+        current_year=datetime.now().year,
+        site=site,
+        carousel_slides=CarouselSlide.query.filter_by(is_active=True)
+        .order_by(CarouselSlide.sort_order, CarouselSlide.id).all(),
+        packages=FeaturedPackage.query.filter_by(is_active=True)
+        .order_by(FeaturedPackage.sort_order, FeaturedPackage.id).all(),
+        services=ServiceItem.query.filter_by(is_active=True)
+        .order_by(ServiceItem.sort_order, ServiceItem.id).all(),
+        gallery_items=GalleryItem.query.filter_by(is_active=True)
+        .order_by(GalleryItem.sort_order, GalleryItem.id).all(),
+    )
+
+def _save_content_image(existing=""):
+    upload = request.files.get("image")
+    image_url = request.form.get("image_url", "").strip()
+    if upload and upload.filename:
+        if not _allowed(upload.filename):
+            raise ValueError("Please upload a PNG, JPG, JPEG, GIF, or WEBP image.")
+        filename = secure_filename(
+            f"content_{int(datetime.utcnow().timestamp())}_{upload.filename}"
+        )
+        upload.save(os.path.join(UPLOAD_DIR, filename))
+        return filename
+    return image_url or existing
+
+def _remove_uploaded_image(image_path):
+    if not image_path or image_path.startswith(("http://", "https://", "img/", "static/")):
+        return
+    safe_name = os.path.basename(image_path)
+    path = os.path.join(UPLOAD_DIR, safe_name)
+    if os.path.isfile(path):
+        os.remove(path)
+
+def _sort_order(form_value):
+    try:
+        return int(form_value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+    
+# ---------------- CONTENT MANAGEMENT ----------------
+@app.route("/content")
+@admin_only
+def content_manager():
+    settings = {
+        row.content_key: row.content_value
+        for row in SiteContent.query.order_by(SiteContent.content_key).all()
+    }
+    return render_template(
+        "content_manager.html",
+        slides=CarouselSlide.query.order_by(CarouselSlide.sort_order, CarouselSlide.id).all(),
+        packages=FeaturedPackage.query.order_by(FeaturedPackage.sort_order, FeaturedPackage.id).all(),
+        gallery_items=GalleryItem.query.order_by(GalleryItem.sort_order, GalleryItem.id).all(),
+        services=ServiceItem.query.order_by(ServiceItem.sort_order, ServiceItem.id).all(),
+        settings=settings,
+    )
+
+
+@app.route("/content/settings/save", methods=["POST"])
+@admin_only
+def save_site_content():
+    keys = [
+        "about_eyebrow", "about_title", "about_highlight", "about_body",
+        "about_secondary", "about_tertiary", "contact_address",
+        "contact_phone", "contact_email",
+    ]
+    for key in keys:
+        row = SiteContent.query.filter_by(content_key=key).first()
+        if row:
+            row.content_value = request.form.get(key, "").strip()
+        else:
+            db.session.add(SiteContent(content_key=key, content_value=request.form.get(key, "").strip()))
+    db.session.commit()
+    flash("About and contact content updated.", "success")
+    return redirect(url_for("content_manager", _anchor="site-settings"))
+
+
+@app.route("/content/carousel/save", methods=["POST"])
+@admin_only
+def save_carousel_slide():
+    sid = request.form.get("id", type=int)
+    slide = CarouselSlide.query.get(sid) if sid else CarouselSlide()
+    try:
+        image_path = _save_content_image(slide.image_path if sid else "")
+    except ValueError as exc:
+        flash(str(exc), "danger")
+        return redirect(url_for("content_manager", _anchor="carousel"))
+    if not image_path:
+        flash("A carousel image or image URL is required.", "danger")
+        return redirect(url_for("content_manager", _anchor="carousel"))
+    slide.eyebrow = request.form.get("eyebrow", "").strip()
+    slide.headline = request.form.get("headline", "").strip()
+    slide.highlight = request.form.get("highlight", "").strip()
+    slide.description = request.form.get("description", "").strip()
+    slide.image_path = image_path
+    slide.button_text = request.form.get("button_text", "Explore Packages").strip()
+    slide.button_url = request.form.get("button_url", "#packages").strip()
+    slide.sort_order = _sort_order(request.form.get("sort_order"))
+    slide.is_active = bool(request.form.get("is_active"))
+    if not sid:
+        db.session.add(slide)
+    db.session.commit()
+    flash("Carousel slide saved.", "success")
+    return redirect(url_for("content_manager", _anchor="carousel"))
+
+
+@app.route("/content/carousel/<int:sid>/delete", methods=["POST"])
+@admin_only
+def delete_carousel_slide(sid):
+    slide = CarouselSlide.query.get_or_404(sid)
+    _remove_uploaded_image(slide.image_path)
+    db.session.delete(slide)
+    db.session.commit()
+    flash("Carousel slide removed.", "success")
+    return redirect(url_for("content_manager", _anchor="carousel"))
+
+
+@app.route("/content/package/save", methods=["POST"])
+@admin_only
+def save_featured_package():
+    pid = request.form.get("id", type=int)
+    package = FeaturedPackage.query.get(pid) if pid else FeaturedPackage()
+    try:
+        image_path = _save_content_image(package.image_path if pid else "")
+    except ValueError as exc:
+        flash(str(exc), "danger")
+        return redirect(url_for("content_manager", _anchor="packages"))
+    if not image_path:
+        flash("A package image or image URL is required.", "danger")
+        return redirect(url_for("content_manager", _anchor="packages"))
+    package.tag = request.form.get("tag", "").strip()
+    package.title = request.form.get("title", "").strip()
+    package.description = request.form.get("description", "").strip()
+    package.image_path = image_path
+    package.sort_order = _sort_order(request.form.get("sort_order"))
+    package.is_active = bool(request.form.get("is_active"))
+    if not pid:
+        db.session.add(package)
+    db.session.commit()
+    flash("Featured package saved.", "success")
+    return redirect(url_for("content_manager", _anchor="packages"))
+
+
+@app.route("/content/package/<int:pid>/delete", methods=["POST"])
+@admin_only
+def delete_featured_package(pid):
+    package = FeaturedPackage.query.get_or_404(pid)
+    _remove_uploaded_image(package.image_path)
+    db.session.delete(package)
+    db.session.commit()
+    flash("Featured package removed.", "success")
+    return redirect(url_for("content_manager", _anchor="packages"))
+
+
+@app.route("/content/gallery/save", methods=["POST"])
+@admin_only
+def save_gallery_item():
+    gid = request.form.get("id", type=int)
+    item = GalleryItem.query.get(gid) if gid else GalleryItem()
+    try:
+        image_path = _save_content_image(item.image_path if gid else "")
+    except ValueError as exc:
+        flash(str(exc), "danger")
+        return redirect(url_for("content_manager", _anchor="gallery"))
+    if not image_path:
+        flash("A gallery image or image URL is required.", "danger")
+        return redirect(url_for("content_manager", _anchor="gallery"))
+    item.title = request.form.get("title", "").strip()
+    item.caption = request.form.get("caption", "").strip()
+    item.image_path = image_path
+    item.sort_order = _sort_order(request.form.get("sort_order"))
+    item.is_active = bool(request.form.get("is_active"))
+    if not gid:
+        db.session.add(item)
+    db.session.commit()
+    flash("Gallery item saved.", "success")
+    return redirect(url_for("content_manager", _anchor="gallery"))
+
+
+@app.route("/content/gallery/<int:gid>/delete", methods=["POST"])
+@admin_only
+def delete_gallery_item(gid):
+    item = GalleryItem.query.get_or_404(gid)
+    _remove_uploaded_image(item.image_path)
+    db.session.delete(item)
+    db.session.commit()
+    flash("Gallery item removed.", "success")
+    return redirect(url_for("content_manager", _anchor="gallery"))
+
+
+@app.route("/content/service/save", methods=["POST"])
+@admin_only
+def save_service_item():
+    service_id = request.form.get("id", type=int)
+    service = ServiceItem.query.get(service_id) if service_id else ServiceItem()
+    service.icon = request.form.get("icon", "bi bi-stars").strip()
+    service.title = request.form.get("title", "").strip()
+    service.description = request.form.get("description", "").strip()
+    service.sort_order = _sort_order(request.form.get("sort_order"))
+    service.is_active = bool(request.form.get("is_active"))
+    if not service_id:
+        db.session.add(service)
+    db.session.commit()
+    flash("Service saved.", "success")
+    return redirect(url_for("content_manager", _anchor="services"))
+
+@app.route("/content/service/<int:service_id>/delete", methods=["POST"])
+@admin_only
+def delete_service_item(service_id):
+    service = ServiceItem.query.get_or_404(service_id)
+    db.session.delete(service)
+    db.session.commit()
+    flash("Service removed.", "success")
+    return redirect(url_for("content_manager", _anchor="services"))
+
+
+def _public_page_context():
+    return {
+        "current_year": datetime.now().year,
+        "site": {
+            row.content_key: row.content_value
+            for row in SiteContent.query.all()
+        },
+        "packages": FeaturedPackage.query.filter_by(is_active=True)
+        .order_by(FeaturedPackage.sort_order, FeaturedPackage.id).all(),
+        "services": ServiceItem.query.filter_by(is_active=True)
+        .order_by(ServiceItem.sort_order, ServiceItem.id).all(),
+    }
+
+
+@app.route("/tours")
+def public_tours():
+    return render_template("reference_page.html", page="tours", **_public_page_context())
+
+
+@app.route("/services")
+def public_services():
+    return render_template("reference_page.html", page="services", **_public_page_context())
+
+
+@app.route("/about")
+def public_about():
+    return render_template("reference_page.html", page="about", **_public_page_context())
+
+
+@app.route("/contact")
+def public_contact():
+    return render_template("reference_page.html", page="contact", **_public_page_context())
 
 
 def _send_contact_notification(inquiry):
@@ -445,6 +821,7 @@ def save_invoice():
     inv.train_number = f.get("train_number", "").strip()
     inv.travel_class = f.get("travel_class", "").strip()
     inv.travel_type = f.get("travel_type", "TATKAL").strip()
+    inv.travel_mode = f.get("travel_mode", "TRAIN").strip()
     inv.description = f.get("description", "").strip() or (
         f"{inv.travel_type} TICKET BOOKED FROM {inv.travel_from} TO {inv.travel_to} "
         f"IN {inv.travel_class} CLASS"

@@ -55,6 +55,7 @@ class Invoice(db.Model):
     train_number = db.Column(db.String(30))
     travel_class = db.Column(db.String(50))
     travel_type = db.Column(db.String(20), default="TATKAL")  # TATKAL / NORMAL
+    travel_mode = db.Column(db.String(20), default="TRAIN")  # TRAIN / BUS / FLIGHT / HOLIDAY PACKAGE / OTHERS
     description = db.Column(db.String(500))
     ticket_fare = db.Column(db.Float, default=0)
     service_charge = db.Column(db.Float, default=0)
@@ -112,3 +113,50 @@ class ContactInquiry(db.Model):
     is_read = db.Column(db.Boolean, default=False, nullable=False)
     email_sent = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+class CarouselSlide(db.Model):
+    __tablename__ = "carousel_slides"
+    id = db.Column(db.Integer, primary_key=True)
+    eyebrow = db.Column(db.String(120), default="SONA Travel")
+    headline = db.Column(db.String(200), nullable=False)
+    highlight = db.Column(db.String(120))
+    description = db.Column(db.Text, nullable=False)
+    image_path = db.Column(db.String(500), nullable=False)
+    button_text = db.Column(db.String(80), default="Explore Packages")
+    button_url = db.Column(db.String(240), default="#packages")
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+
+class FeaturedPackage(db.Model):
+    __tablename__ = "featured_packages"
+    id = db.Column(db.Integer, primary_key=True)
+    tag = db.Column(db.String(100))
+    title = db.Column(db.String(160), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    image_path = db.Column(db.String(500), nullable=False)
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+
+class GalleryItem(db.Model):
+    __tablename__ = "gallery_items"
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(160))
+    caption = db.Column(db.String(300))
+    image_path = db.Column(db.String(500), nullable=False)
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+
+class ServiceItem(db.Model):
+    __tablename__ = "service_items"
+    id = db.Column(db.Integer, primary_key=True)
+    icon = db.Column(db.String(80), default="bi bi-stars")
+    title = db.Column(db.String(160), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+
+class SiteContent(db.Model):
+    __tablename__ = "site_content"
+    id = db.Column(db.Integer, primary_key=True)
+    content_key = db.Column(db.String(100), unique=True, nullable=False)
+    content_value = db.Column(db.Text, default="")

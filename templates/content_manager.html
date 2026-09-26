@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}Content Management{% endblock %}
+{% block card_header_left %}<i class="bi bi-window-stack me-2 text-accent"></i>Website Content{% endblock %}
+{% block card_header_right %}
+  <a class="btn btn-sm btn-outline-primary" href="{{ url_for('public_home') }}" target="_blank">
+    <i class="bi bi-box-arrow-up-right me-1"></i>View Website
+  </a>
+{% endblock %}
+{% block content %}
+<div class="content-manager">
+  <div class="content-intro">
+    <div>
+      <span class="text-uppercase small fw-semibold text-primary">Public website editor</span>
+      <h2>Keep your travel story fresh.</h2>
+      <p>Update the homepage without touching code. Changes are published immediately when you save.</p>
+    </div>
+    <div class="content-stat">
+      <i class="bi bi-lightning-charge-fill"></i>
+      <span><strong>Live updates</strong><small>Changes appear on the public homepage</small></span>
+    </div>
+  </div>
+
+  <ul class="nav nav-pills content-tabs mb-4" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#carousel" type="button"><i class="bi bi-images me-2"></i>Carousel</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#packages" type="button"><i class="bi bi-suitcase2 me-2"></i>Packages</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#gallery" type="button"><i class="bi bi-grid-3x3-gap me-2"></i>Gallery</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#services" type="button"><i class="bi bi-stars me-2"></i>Services</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#site-settings" type="button"><i class="bi bi-pencil-square me-2"></i>About &amp; Contact</button></li>
+  </ul>
+
+  <div class="tab-content">
+    <section class="tab-pane fade show active" id="carousel">
+      <div class="manager-section-heading"><div><h3>Homepage carousel</h3><p>Showcase your latest destinations, offers, and travel promise.</p></div><span class="content-count">{{ slides|length }} slides</span></div>
+      <form class="manager-form" method="post" action="{{ url_for('save_carousel_slide') }}" enctype="multipart/form-data">
+        <div class="form-section-label">Add a new slide</div>
+        <div class="row g-3">
+          <div class="col-lg-4"><label class="form-label">Slide image</label><input class="form-control" type="file" name="image" accept=".png,.jpg,.jpeg,.gif,.webp"><div class="form-text">Or use an image URL below.</div></div>
+          <div class="col-lg-4"><label class="form-label">Image URL</label><input class="form-control" name="image_url" placeholder="https://..."></div>
+          <div class="col-lg-2"><label class="form-label">Order</label><input class="form-control" type="number" name="sort_order" value="1"></div>
+          <div class="col-lg-2 d-flex align-items-end"><label class="form-check mb-2"><input class="form-check-input" type="checkbox" name="is_active" checked><span class="form-check-label">Visible</span></label></div>
+          <div class="col-md-4"><label class="form-label">Eyebrow</label><input class="form-control" name="eyebrow" placeholder="SONA Travel Agency"></div>
+          <div class="col-md-4"><label class="form-label">Headline</label><input class="form-control" name="headline" required placeholder="We Never Stop Working For You"></div>
+          <div class="col-md-4"><label class="form-label">Highlighted text</label><input class="form-control" name="highlight" placeholder="SONA Travel"></div>
+          <div class="col-12"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="2" required placeholder="Describe this travel message..."></textarea></div>
+          <div class="col-md-5"><label class="form-label">Button label</label><input class="form-control" name="button_text" value="Explore Packages"></div>
+          <div class="col-md-5"><label class="form-label">Button link</label><input class="form-control" name="button_url" value="#packages"></div>
+          <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit"><i class="bi bi-plus-lg me-1"></i>Add slide</button></div>
+        </div>
+      </form>
+      {% for slide in slides %}
+      <form class="manager-item" method="post" action="{{ url_for('save_carousel_slide') }}" enctype="multipart/form-data">
+        <input type="hidden" name="id" value="{{ slide.id }}">
+        <div class="manager-item-preview"><img src="{{ content_image_url(slide.image_path) }}" alt=""><span class="preview-label">Slide {{ loop.index }}</span></div>
+        <div class="manager-item-fields">
+          <div class="row g-2">
+            <div class="col-md-4"><label class="form-label">Headline</label><input class="form-control form-control-sm" name="headline" value="{{ slide.headline }}" required></div>
+            <div class="col-md-4"><label class="form-label">Highlight</label><input class="form-control form-control-sm" name="highlight" value="{{ slide.highlight or '' }}"></div>
+            <div class="col-md-2"><label class="form-label">Order</label><input class="form-control form-control-sm" type="number" name="sort_order" value="{{ slide.sort_order }}"></div>
+            <div class="col-md-2 d-flex align-items-end"><label class="form-check mb-1"><input class="form-check-input" type="checkbox" name="is_active" {% if slide.is_active %}checked{% endif %}><span class="form-check-label small">Visible</span></label></div>
+            <div class="col-12"><label class="form-label">Description</label><textarea class="form-control form-control-sm" name="description" rows="2" required>{{ slide.description }}</textarea></div>
+            <div class="col-md-3"><label class="form-label">Eyebrow</label><input class="form-control form-control-sm" name="eyebrow" value="{{ slide.eyebrow or '' }}"></div>
+            <div class="col-md-3"><label class="form-label">Button label</label><input class="form-control form-control-sm" name="button_text" value="{{ slide.button_text or '' }}"></div>
+            <div class="col-md-3"><label class="form-label">Button link</label><input class="form-control form-control-sm" name="button_url" value="{{ slide.button_url or '' }}"></div>
+            <div class="col-md-3"><label class="form-label">Replace image</label><input class="form-control form-control-sm" type="file" name="image" accept=".png,.jpg,.jpeg,.gif,.webp"></div>
+          </div>
+          <div class="manager-item-actions"><button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-check2 me-1"></i>Save</button><button class="btn btn-sm btn-outline-danger" type="submit" formmethod="post" formaction="{{ url_for('delete_carousel_slide', sid=slide.id) }}" onclick="return confirm('Remove this carousel slide?')"><i class="bi bi-trash3"></i></button></div>
+        </div>
+      </form>
+      {% endfor %}
+    </section>
+
+    <section class="tab-pane fade" id="packages">
+      <div class="manager-section-heading"><div><h3>Featured packages</h3><p>Control the travel experiences shown in the featured section.</p></div><span class="content-count">{{ packages|length }} packages</span></div>
+      <form class="manager-form" method="post" action="{{ url_for('save_featured_package') }}" enctype="multipart/form-data">
+        <div class="form-section-label">Add a package</div>
+        <div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Image</label><input class="form-control" type="file" name="image" accept=".png,.jpg,.jpeg,.gif,.webp"></div>
+          <div class="col-md-4"><label class="form-label">Image URL</label><input class="form-control" name="image_url" placeholder="https://..."></div>
+          <div class="col-md-2"><label class="form-label">Order</label><input class="form-control" type="number" name="sort_order" value="1"></div>
+          <div class="col-md-2 d-flex align-items-end"><label class="form-check mb-2"><input class="form-check-input" type="checkbox" name="is_active" checked><span class="form-check-label">Visible</span></label></div>
+          <div class="col-md-4"><label class="form-label">Tag</label><input class="form-control" name="tag" placeholder="Heritage Escape"></div>
+          <div class="col-md-4"><label class="form-label">Title</label><input class="form-control" name="title" required placeholder="Royal Rajasthan"></div>
+          <div class="col-md-4 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit"><i class="bi bi-plus-lg me-1"></i>Add package</button></div>
+          <div class="col-12"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="2" required placeholder="Describe the package..."></textarea></div>
+        </div>
+      </form>
+      {% for package in packages %}
+      <form class="manager-item" method="post" action="{{ url_for('save_featured_package') }}" enctype="multipart/form-data">
+        <input type="hidden" name="id" value="{{ package.id }}">
+        <div class="manager-item-preview"><img src="{{ content_image_url(package.image_path) }}" alt=""><span class="preview-label">Package {{ loop.index }}</span></div>
+        <div class="manager-item-fields"><div class="row g-2">
+          <div class="col-md-3"><label class="form-label">Title</label><input class="form-control form-control-sm" name="title" value="{{ package.title }}" required></div>
+          <div class="col-md-3"><label class="form-label">Tag</label><input class="form-control form-control-sm" name="tag" value="{{ package.tag or '' }}"></div>
+          <div class="col-md-2"><label class="form-label">Order</label><input class="form-control form-control-sm" type="number" name="sort_order" value="{{ package.sort_order }}"></div>
+          <div class="col-md-2"><label class="form-label">Replace image</label><input class="form-control form-control-sm" type="file" name="image" accept=".png,.jpg,.jpeg,.gif,.webp"></div>
+          <div class="col-md-2 d-flex align-items-end"><label class="form-check mb-1"><input class="form-check-input" type="checkbox" name="is_active" {% if package.is_active %}checked{% endif %}><span class="form-check-label small">Visible</span></label></div>
+          <div class="col-12"><label class="form-label">Description</label><textarea class="form-control form-control-sm" name="description" rows="2" required>{{ package.description }}</textarea></div>
+        </div><div class="manager-item-actions"><button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-check2 me-1"></i>Save</button><button class="btn btn-sm btn-outline-danger" type="submit" formmethod="post" formaction="{{ url_for('delete_featured_package', pid=package.id) }}" onclick="return confirm('Remove this package?')"><i class="bi bi-trash3"></i></button></div></div>
+      </form>
+      {% endfor %}
+    </section>
+
+    <section class="tab-pane fade" id="gallery">
+      <div class="manager-section-heading"><div><h3>Travel gallery</h3><p>Keep your gallery current with recent arrivals and destination moments.</p></div><span class="content-count">{{ gallery_items|length }} images</span></div>
+      <form class="manager-form" method="post" action="{{ url_for('save_gallery_item') }}" enctype="multipart/form-data">
+        <div class="form-section-label">Add gallery image</div><div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Image</label><input class="form-control" type="file" name="image" accept=".png,.jpg,.jpeg,.gif,.webp"></div>
+          <div class="col-md-4"><label class="form-label">Image URL</label><input class="form-control" name="image_url" placeholder="https://..."></div>
+          <div class="col-md-2"><label class="form-label">Order</label><input class="form-control" type="number" name="sort_order" value="1"></div>
+          <div class="col-md-2 d-flex align-items-end"><label class="form-check mb-2"><input class="form-check-input" type="checkbox" name="is_active" checked><span class="form-check-label">Visible</span></label></div>
+          <div class="col-md-5"><label class="form-label">Title</label><input class="form-control" name="title" required placeholder="Thailand arrival"></div>
+          <div class="col-md-5"><label class="form-label">Caption</label><input class="form-control" name="caption" placeholder="A warm welcome for every traveller."></div>
+          <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit"><i class="bi bi-plus-lg me-1"></i>Add image</button></div>
+        </div>
+      </form>
+      <div class="content-mini-grid">
+      {% for item in gallery_items %}
+        <form class="gallery-manager-item" method="post" action="{{ url_for('save_gallery_item') }}" enctype="multipart/form-data">
+          <input type="hidden" name="id" value="{{ item.id }}"><img src="{{ content_image_url(item.image_path) }}" alt="">
+          <div class="p-3"><input class="form-control form-control-sm mb-2" name="title" value="{{ item.title or '' }}" required><input class="form-control form-control-sm mb-2" name="caption" value="{{ item.caption or '' }}"><div class="d-flex gap-2 align-items-center"><input class="form-control form-control-sm" type="number" name="sort_order" value="{{ item.sort_order }}" title="Order"><label class="form-check small text-nowrap"><input class="form-check-input" type="checkbox" name="is_active" {% if item.is_active %}checked{% endif %}> Visible</label></div><div class="mt-2 d-flex gap-2"><input class="form-control form-control-sm" type="file" name="image" accept=".png,.jpg,.jpeg,.gif,.webp"><button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-check2"></i></button><button class="btn btn-sm btn-outline-danger" type="submit" formmethod="post" formaction="{{ url_for('delete_gallery_item', gid=item.id) }}" onclick="return confirm('Remove this gallery image?')"><i class="bi bi-trash3"></i></button></div></div>
+        </form>
+      {% endfor %}
+      </div>
+    </section>
+
+    <section class="tab-pane fade" id="services">
+      <div class="manager-section-heading"><div><h3>Services</h3><p>Describe the services your team offers and choose an icon from Bootstrap Icons.</p></div><span class="content-count">{{ services|length }} services</span></div>
+      <form class="manager-form" method="post" action="{{ url_for('save_service_item') }}">
+        <div class="form-section-label">Add a service</div><div class="row g-3">
+          <div class="col-md-3"><label class="form-label">Bootstrap icon class</label><input class="form-control" name="icon" value="bi bi-stars" placeholder="bi bi-airplane"></div>
+          <div class="col-md-3"><label class="form-label">Title</label><input class="form-control" name="title" required placeholder="Travel insurance"></div>
+          <div class="col-md-2"><label class="form-label">Order</label><input class="form-control" type="number" name="sort_order" value="1"></div>
+          <div class="col-md-2 d-flex align-items-end"><label class="form-check mb-2"><input class="form-check-input" type="checkbox" name="is_active" checked><span class="form-check-label">Visible</span></label></div>
+          <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit"><i class="bi bi-plus-lg me-1"></i>Add</button></div>
+          <div class="col-12"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="2" required placeholder="Explain the service..."></textarea></div>
+        </div>
+      </form>
+      {% for service in services %}
+      <form class="manager-row" method="post" action="{{ url_for('save_service_item') }}">
+        <input type="hidden" name="id" value="{{ service.id }}"><div class="service-icon-preview"><i class="{{ service.icon }}"></i></div><div class="flex-grow-1"><div class="row g-2"><div class="col-md-3"><input class="form-control form-control-sm" name="title" value="{{ service.title }}" required></div><div class="col-md-3"><input class="form-control form-control-sm" name="icon" value="{{ service.icon }}"></div><div class="col-md-1"><input class="form-control form-control-sm" type="number" name="sort_order" value="{{ service.sort_order }}"></div><div class="col-md-5"><input class="form-control form-control-sm" name="description" value="{{ service.description }}" required></div></div></div><label class="form-check mx-2 text-nowrap small"><input class="form-check-input" type="checkbox" name="is_active" {% if service.is_active %}checked{% endif %}> Visible</label><button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-check2"></i></button><button class="btn btn-sm btn-outline-danger" type="submit" formmethod="post" formaction="{{ url_for('delete_service_item', service_id=service.id) }}" onclick="return confirm('Remove this service?')"><i class="bi bi-trash3"></i></button>
+      </form>
+      {% endfor %}
+    </section>
+
+    <section class="tab-pane fade" id="site-settings">
+      <div class="manager-section-heading"><div><h3>About &amp; contact content</h3><p>Update the story, address, and contact information displayed on the public website.</p></div></div>
+      <form class="manager-form" method="post" action="{{ url_for('save_site_content') }}">
+        <div class="form-section-label">About SONA Travel</div><div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Eyebrow</label><input class="form-control" name="about_eyebrow" value="{{ settings.get('about_eyebrow', '') }}"></div>
+          <div class="col-md-5"><label class="form-label">Title</label><input class="form-control" name="about_title" value="{{ settings.get('about_title', '') }}"></div>
+          <div class="col-md-3"><label class="form-label">Highlight</label><input class="form-control" name="about_highlight" value="{{ settings.get('about_highlight', '') }}"></div>
+          <div class="col-md-4"><label class="form-label">About paragraph 1</label><textarea class="form-control" name="about_body" rows="5">{{ settings.get('about_body', '') }}</textarea></div>
+          <div class="col-md-4"><label class="form-label">About paragraph 2</label><textarea class="form-control" name="about_secondary" rows="5">{{ settings.get('about_secondary', '') }}</textarea></div>
+          <div class="col-md-4"><label class="form-label">About paragraph 3</label><textarea class="form-control" name="about_tertiary" rows="5">{{ settings.get('about_tertiary', '') }}</textarea></div>
+        </div>
+        <div class="form-section-label mt-4">Contact details</div><div class="row g-3">
+          <div class="col-md-5"><label class="form-label">Office address</label><textarea class="form-control" name="contact_address" rows="3">{{ settings.get('contact_address', '') }}</textarea></div>
+          <div class="col-md-3"><label class="form-label">Phone</label><input class="form-control" name="contact_phone" value="{{ settings.get('contact_phone', '') }}"></div>
+          <div class="col-md-4"><label class="form-label">Email</label><input class="form-control" type="email" name="contact_email" value="{{ settings.get('contact_email', '') }}"></div>
+        </div>
+        <div class="text-end mt-4"><button class="btn btn-primary px-4" type="submit"><i class="bi bi-check2 me-1"></i>Save website content</button></div>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}

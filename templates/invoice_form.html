@@ -51,6 +51,16 @@
     <div class="col-md-3"><label class="form-label">Travel From</label><input class="form-control" name="travel_from" value="{{ invoice.travel_from if invoice else '' }}"></div>
     <div class="col-md-3"><label class="form-label">Travel To</label><input class="form-control" name="travel_to" value="{{ invoice.travel_to if invoice else '' }}"></div>
 
+    <div class="col-md-3"><label class="form-label">Travel Mode</label>
+      <select class="form-select" name="travel_mode">
+        {% set tm = invoice.travel_mode if invoice else 'TRAIN' %}
+        <option {% if tm=='TRAIN' %}selected{% endif %}>TRAIN</option>
+        <option {% if tm=='BUS' %}selected{% endif %}>BUS</option>
+        <option {% if tm=='FLIGHT' %}selected{% endif %}>FLIGHT</option>
+        <option {% if tm=='HOLIDAY PACKAGE' %}selected{% endif %}>HOLIDAY PACKAGE</option>
+        <option {% if tm=='OTHERS' %}selected{% endif %}>OTHERS</option>
+      </select>
+    </div>
     <div class="col-md-3"><label class="form-label">Travel Type</label>
       <select class="form-select" name="travel_type">
         {% set tt = invoice.travel_type if invoice else 'TATKAL' %}

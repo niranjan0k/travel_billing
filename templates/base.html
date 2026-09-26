@@ -129,6 +129,11 @@
                 <i class="bi bi-envelope-paper"></i><span>Contact Enquiries</span>
               </a>
             </li>
+            <li>
+              <a class="nav-link {% if p.startswith('/content') %}active{% endif %}" href="{{ url_for('content_manager') }}">
+                <i class="bi bi-window-stack"></i><span>Website Content</span>
+              </a>
+            </li>
           </ul>
         </div>
       </li>
