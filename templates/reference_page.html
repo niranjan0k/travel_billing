@@ -1,33 +1,38 @@
 {% set page_meta = {
   'tours': {
-    'kicker': 'Tour Packages',
-    'title': 'Curated escapes',
+    'kicker': 'Tour Packages from Ranchi',
+    'title': 'Holiday Packages',
     'italic': 'across India & beyond.',
-    'subtitle': 'From weekend getaways to grand two-week adventures—each of our journeys is designed by hand, priced fairly and delivered with quiet care.',
+    'subtitle': 'Explore carefully planned domestic and international tour packages from Ranchi, including Kashmir, Kerala, Rajasthan, Goa, Dubai and more. Get customized itineraries, hotels, transport and travel assistance from SONA Travel Agency.',
     'image': 'img/presentation/kashmir-carousel.jpg'
   },
+
   'services': {
-    'kicker': 'Our Services',
-    'title': 'Everything your',
-    'italic': 'journey needs.',
-    'subtitle': 'Rail, air, hotels, visas, forex and cruises—handled in-house, so nothing gets lost between counters.',
+    'kicker': 'Travel Services in Ranchi',
+    'title': 'Complete Travel',
+    'italic': 'services under one roof.',
+    'subtitle': 'Book flights, railway tickets, hotels, holiday packages, visas, forex and cruises with SONA Travel Agency in Ranchi. Our travel team helps you plan, book and manage your journey with reliable assistance.',
     'image': 'img/presentation/kerala-carousel.jpg'
   },
+
   'about': {
-    'kicker': 'Our Story',
-    'title': 'A quiet promise,',
-    'italic': 'kept for years.',
-    'subtitle': 'Founded in 2017 by Mr. Ishwar Chandra, SONA Travel Agency is built on responsive service, practical advice and a commitment to keep working for every traveller.',
+    'kicker': 'SONA Travel Agency, Ranchi',
+    'title': 'Your Trusted Travel',
+    'italic': 'Partner Since 2017.',
+    'subtitle': 'Founded in 2017 by Mr. Ishwar Chandra, SONA Travel Agency is a Ranchi-based travel agency providing flight and railway booking, hotels, holiday packages, visa assistance, forex and other travel services.',
     'image': 'img/presentation/rajasthan-carousel.jpg'
   },
+
   'contact': {
-    'kicker': 'Contact',
-    'title': 'Let’s plan',
-    'italic': 'your next journey.',
-    'subtitle': 'Whether it’s a last-minute ticket or a two-week international itinerary—drop us a note and someone from our travel desk will get in touch within a day.',
+    'kicker': 'Contact SONA Travel Agency',
+    'title': 'Plan Your Next',
+    'italic': 'Journey from Ranchi.',
+    'subtitle': 'Contact SONA Travel Agency in Ranchi for flight and railway tickets, hotels, domestic and international holiday packages, visa assistance and customized travel planning.',
     'image': 'img/presentation/goa-carousel.jpg'
   }
+
 } %}
+
 {% set meta = page_meta[page] %}
 <!doctype html>
 <html lang="en">
@@ -35,6 +40,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ meta.title }} {{ meta.italic }} | SONA Travel Agency</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/firm-logo.ico') }}" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
