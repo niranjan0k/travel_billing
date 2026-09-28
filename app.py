@@ -90,12 +90,12 @@ def _is_safe_next(target):
 def _valid_login(username, password):
     # Check DB users first
     user = User.query.filter_by(username=username, is_active=True).first()
-    print(f"Checking login for user: {username}, found user: {user}")
-    if user:
-        print(f"Checking login for user: {password}")
-        # updating the password hash for the default admin user if it is not set
-        user.set_password("Admin@321*")
-        db.session.commit()
+    # print(f"Checking login for user: {username}, found user: {user}")
+    # if user:
+    #     print(f"Checking login for user: {password}")
+    #     # updating the password hash for the default admin user if it is not set
+    #     user.set_password("Admin@321*")
+    #     db.session.commit()
     if user:
         return user.check_password(password)
 
